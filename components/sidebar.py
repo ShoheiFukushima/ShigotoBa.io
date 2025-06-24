@@ -80,6 +80,59 @@ def render_sidebar():
         
         st.markdown("---")
         
+        # サイドバーCSS
+        st.markdown("""
+        <style>
+            /* サイドバー最小化時のスタイル */
+            section[data-testid="stSidebar"][aria-expanded="false"] {
+                width: 30px !important;
+                min-width: 30px !important;
+                overflow: hidden;
+                transition: width 0.3s ease;
+            }
+            
+            /* 右端7ピクセルのホバーエリア */
+            section[data-testid="stSidebar"][aria-expanded="false"]::after {
+                content: "";
+                position: absolute;
+                right: 0;
+                top: 0;
+                width: 7px;
+                height: 100%;
+                background: transparent;
+                cursor: pointer;
+                z-index: 10001;
+            }
+            
+            /* ホバー時の視覚的フィードバック */
+            section[data-testid="stSidebar"][aria-expanded="false"]::after:hover {
+                background: rgba(59, 130, 246, 0.2);
+            }
+            
+            /* ホバー時にサイドバーを展開 */
+            section[data-testid="stSidebar"][aria-expanded="false"]:hover {
+                width: 300px !important;
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+            }
+            
+            /* 最小化時は全コンテンツを非表示 */
+            section[data-testid="stSidebar"][aria-expanded="false"] > div {
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            
+            /* ホバー時にコンテンツを表示 */
+            section[data-testid="stSidebar"][aria-expanded="false"]:hover > div {
+                opacity: 1;
+            }
+            
+            /* 縦線インジケーター */
+            section[data-testid="stSidebar"][aria-expanded="false"] {
+                border-right: 1px solid rgba(59, 130, 246, 0.3);
+            }
+        </style>
+        """, unsafe_allow_html=True)
+        
         # 1. 新規開発カテゴリ
         with st.expander("🏗️ 新規開発", expanded=False):
             if st.button("開発室", key="dev_room_nav", use_container_width=True):

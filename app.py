@@ -45,11 +45,72 @@ st.markdown("""
         z-index: 9999;  /* ヘッダーの次のレイヤー */
         top: 34px !important;  /* ヘッダーの高さ分下げる */
         height: calc(100vh - 34px) !important;
+        transition: all 0.3s ease;
+    }
+    
+    /* サイドバーが折りたたまれた時 */
+    section[data-testid="stSidebar"][aria-expanded="false"] {
+        width: 30px !important;
+        min-width: 30px !important;
+        overflow: hidden;
+        transition: width 0.3s ease;
+        border-right: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    
+    /* 右端7ピクセルのホバーエリア */
+    section[data-testid="stSidebar"][aria-expanded="false"]::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: 34px;
+        width: 7px;
+        height: calc(100% - 34px);
+        background: transparent;
+        cursor: pointer;
+        z-index: 10001;
+    }
+    
+    /* ホバー時の視覚的フィードバック */
+    section[data-testid="stSidebar"][aria-expanded="false"]::after:hover {
+        background: rgba(59, 130, 246, 0.2);
+    }
+    
+    /* ホバー時にサイドバーを展開 */
+    section[data-testid="stSidebar"][aria-expanded="false"]:hover {
+        width: 300px !important;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
     }
     
     /* サイドバーの内容もヘッダー分下げる */
     section[data-testid="stSidebar"] > div:first-child {
         padding-top: 10px;
+    }
+    
+    /* サイドバーのトグルボタンを調整 */
+    button[kind="header"] {
+        top: 44px !important;  /* ヘッダーの下に配置 */
+        z-index: 9998;
+    }
+    
+    /* メインコンテンツエリアの調整 */
+    section.main > div {
+        padding-top: 34px !important;
+    }
+    
+    /* ヘッダーを常に表示 */
+    .stApp > header {
+        display: none;  /* Streamlitのデフォルトヘッダーを非表示 */
+    }
+    
+    /* 最小化時は全コンテンツを非表示 */
+    section[data-testid="stSidebar"][aria-expanded="false"] > div {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    /* ホバー時にコンテンツを表示 */
+    section[data-testid="stSidebar"][aria-expanded="false"]:hover > div {
+        opacity: 1;
     }
     
     .header-title {
@@ -230,10 +291,12 @@ with main_col2:
     
     if 'projects' in st.session_state and st.session_state.projects:
         for pid, project in list(st.session_state.projects.items())[:3]:
-            progress = (project['flow_stage'] / 7) * 100
+            # flow_stageがない場合のデフォルト値
+            flow_stage = project.get('flow_stage', 3)  
+            progress = (flow_stage / 7) * 100
             st.write(f"**{project['name']}**")
             st.progress(progress / 100)
-            st.caption(f"Stage {project['flow_stage'] + 1}/8 - {progress:.0f}%")
+            st.caption(f"Stage {flow_stage + 1}/8 - {progress:.0f}%")
     else:
         st.info("プロジェクトがありません")
     
