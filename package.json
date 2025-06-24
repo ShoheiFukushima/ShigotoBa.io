@@ -1,0 +1,27 @@
+{
+  "name": "marketing-automation-tools",
+  "version": "1.0.0",
+  "description": "プロダクトの市場分析とマーケティングコンテンツを自動生成するツールセットです。",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:report": "playwright show-report",
+    "test:basic": "playwright test tests/dashboard-basic.spec.js",
+    "test:projects": "playwright test tests/project-management.spec.js",
+    "test:flow": "playwright test tests/flow-navigation.spec.js",
+    "test:visual": "playwright test tests/visual-regression.spec.js",
+    "test:e2e": "playwright test tests/dashboard-e2e.spec.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.53.1"
+  }
+}

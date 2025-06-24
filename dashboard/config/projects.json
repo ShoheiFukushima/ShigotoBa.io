@@ -1,0 +1,118 @@
+{
+  "projects": [
+    {
+      "id": "ai-news-curator",
+      "name": "AINewsCuratorLINE",
+      "path": "/Users/fukushimashouhei/AIOrganize/tmp/projects/AINewsCuratorLINE",
+      "category": "情報収集・配信",
+      "target": "ニュース収集が必要なチーム",
+      "status": "production",
+      "techStack": ["Next.js", "TypeScript", "Cloud Run", "Claude API"],
+      "marketingSchedule": "weekly",
+      "preferredDay": "monday",
+      "features": [
+        "AI自動ニュース要約",
+        "LINE/メール配信",
+        "RSS自動収集"
+      ],
+      "uniqueValue": "AIによる自動要約で情報収集時間を90%削減",
+      "price": "月額5,000円〜",
+      "users": 50
+    },
+    {
+      "id": "action-flow",
+      "name": "ActionFlow Engine",
+      "path": "/Users/fukushimashouhei/AIOrganize/tmp/projects/ActionFlow-Engine",
+      "category": "タスク管理",
+      "target": "生産性向上を求める個人・チーム",
+      "status": "development",
+      "techStack": ["FastAPI", "React", "PostgreSQL", "Gemini AI"],
+      "marketingSchedule": "weekly",
+      "preferredDay": "tuesday",
+      "features": [
+        "AIタスク分解",
+        "Googleカレンダー連携",
+        "自動スケジューリング"
+      ],
+      "uniqueValue": "抽象的なタスクをAIが実行可能な計画に自動変換",
+      "price": "月額1,980円〜",
+      "users": 0
+    },
+    {
+      "id": "footage-organizer",
+      "name": "FootageOrganizer",
+      "path": "/Users/fukushimashouhei/AIOrganize/tmp/projects/FootageOrganizer",
+      "category": "メディア管理",
+      "target": "映像制作者・クリエイター",
+      "status": "development",
+      "techStack": ["React", "FastAPI", "Docker"],
+      "marketingSchedule": "weekly",
+      "preferredDay": "wednesday",
+      "features": [
+        "AI自動タグ付け",
+        "素材検索",
+        "プロジェクト管理"
+      ],
+      "uniqueValue": "AI分析で映像素材を瞬時に検索可能",
+      "price": "月額2,980円〜",
+      "users": 0
+    },
+    {
+      "id": "business-card-ai",
+      "name": "Business Card AI",
+      "path": "/Users/fukushimashouhei/AIOrganize/tmp/projects/business-card-ai",
+      "category": "ビジネスツール",
+      "target": "営業・ビジネスパーソン",
+      "status": "production",
+      "techStack": ["JavaScript", "Tesseract.js", "Bootstrap"],
+      "marketingSchedule": "weekly",
+      "preferredDay": "thursday",
+      "features": [
+        "名刺OCR読み取り",
+        "AIメール生成",
+        "ワンタップ送信"
+      ],
+      "uniqueValue": "名刺交換後のフォローメールを10秒で作成",
+      "price": "無料（プレミアム月額980円）",
+      "users": 200
+    },
+    {
+      "id": "modern-todo",
+      "name": "Modern Todo App",
+      "path": "/Users/fukushimashouhei/AIOrganize/tmp/projects/modern-todo-app",
+      "category": "生産性",
+      "target": "個人ユーザー",
+      "status": "production",
+      "techStack": ["React", "TypeScript", "FastAPI"],
+      "marketingSchedule": "weekly",
+      "preferredDay": "friday",
+      "features": [
+        "リアルタイム同期",
+        "統計ダッシュボード",
+        "スマートフィルター"
+      ],
+      "uniqueValue": "シンプルで高速、データ分析機能付きTodoアプリ",
+      "price": "無料（広告なし月額300円）",
+      "users": 500
+    }
+  ],
+  "marketingCalendar": {
+    "monday": "AINewsCuratorLINE",
+    "tuesday": "ActionFlow Engine",
+    "wednesday": "FootageOrganizer",
+    "thursday": "Business Card AI",
+    "friday": "Modern Todo App"
+  },
+  "defaultCampaigns": {
+    "weekly": [
+      "SNS投稿（機能紹介）",
+      "ブログ記事（使い方・事例）",
+      "メールニュースレター"
+    ],
+    "monthly": [
+      "プレスリリース",
+      "大型キャンペーン",
+      "ユーザーインタビュー"
+    ]
+  }
+}
