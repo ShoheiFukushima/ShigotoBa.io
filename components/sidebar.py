@@ -82,45 +82,57 @@ def render_sidebar():
         
         # 1. 新規開発カテゴリ
         with st.expander("🏗️ 新規開発", expanded=False):
-            if st.button("🏗️ 開発室", key="dev_room_nav", use_container_width=True):
+            if st.button("開発室", key="dev_room_nav", use_container_width=True):
                 st.switch_page("pages/development_room.py")
-            if st.button("📊 プロジェクト管理室", key="project_mgmt_nav", use_container_width=True):
+            if st.button("プロジェクト管理室", key="project_mgmt_nav", use_container_width=True):
                 st.switch_page("pages/project_management.py")
-            if st.button("📦 プロダクト管理", key="product_mgmt_nav", use_container_width=True):
+            if st.button("プロダクト管理", key="product_mgmt_nav", use_container_width=True):
                 st.switch_page("pages/product_management.py")
-            if st.button("🧪 A/Bテスト", key="ab_testing_nav", use_container_width=True):
+            if st.button("A/Bテスト", key="ab_testing_nav", use_container_width=True):
                 st.switch_page("pages/ab_testing.py")
-            if st.button("📋 ツール一覧", key="dev_tools_list_nav", use_container_width=True):
+            if st.button("新製品", key="new_product_nav", use_container_width=True):
+                st.switch_page("pages/new_product.py")
+            if st.button("プロジェクト詳細", key="project_detail_nav", use_container_width=True):
+                st.switch_page("pages/project_detail.py")
+            if st.button("ツール一覧", key="dev_tools_list_nav", use_container_width=True):
                 st.switch_page("pages/dev_tools_list.py")
         
         # 2. 運営・分析カテゴリ
         with st.expander("📊 運営・分析", expanded=False):
-            if st.button("📈 パフォーマンスダッシュボード", key="performance_nav", use_container_width=True):
+            if st.button("パフォーマンスダッシュボード", key="performance_nav", use_container_width=True):
                 st.switch_page("pages/performance_dashboard.py")
-            if st.button("🎯 アトリビューション分析", key="attribution_nav", use_container_width=True):
+            if st.button("アトリビューション分析", key="attribution_nav", use_container_width=True):
                 st.switch_page("pages/attribution_analysis.py")
-            if st.button("🛤️ カスタマージャーニー", key="customer_journey_nav", use_container_width=True):
+            if st.button("カスタマージャーニー", key="customer_journey_nav", use_container_width=True):
                 st.switch_page("pages/customer_journey_engine.py")
-            if st.button("📊 プロダクト分析", key="product_analysis_nav", use_container_width=True):
+            if st.button("プロダクト分析", key="product_analysis_nav", use_container_width=True):
                 st.switch_page("pages/product_analysis.py")
-            if st.button("💬 リアルタイムAIチャット", key="ai_chat_nav", use_container_width=True):
+            if st.button("リアルタイムAIチャット", key="ai_chat_nav", use_container_width=True):
                 st.switch_page("pages/realtime_chat.py")
-            if st.button("📋 ツール一覧", key="analysis_tools_list_nav", use_container_width=True):
+            if st.button("AI設定", key="ai_settings_nav", use_container_width=True):
+                st.switch_page("pages/ai_settings.py")
+            if st.button("フローダッシュボード", key="flow_dashboard_nav", use_container_width=True):
+                st.switch_page("pages/flow_dashboard.py")
+            if st.button("ツール一覧", key="analysis_tools_list_nav", use_container_width=True):
                 st.switch_page("pages/analysis_tools_list.py")
         
         # 3. 広告・マーケカテゴリ
         with st.expander("🎨 広告・マーケ", expanded=False):
-            if st.button("🎨 AI Creative Studio", key="ai_creative_nav", use_container_width=True):
+            if st.button("AI Creative Studio", key="ai_creative_nav", use_container_width=True):
                 st.switch_page("pages/ai_creative_studio.py")
-            if st.button("⚡ リアルタイム広告最適化", key="realtime_ad_nav", use_container_width=True):
+            if st.button("リアルタイム広告最適化", key="realtime_ad_nav", use_container_width=True):
                 st.switch_page("pages/realtime_ad_optimizer.py")
-            if st.button("💰 価格戦略コンサルティング", key="pricing_strategy_nav", use_container_width=True):
+            if st.button("価格戦略コンサルティング", key="pricing_strategy_nav", use_container_width=True):
                 st.switch_page("pages/pricing_strategy.py")
-            if st.button("🌐 マルチプラットフォーム管理", key="multi_platform_nav", use_container_width=True):
+            if st.button("マルチプラットフォーム管理", key="multi_platform_nav", use_container_width=True):
                 st.switch_page("pages/multi_platform_manager.py")
-            if st.button("🚀 自動投稿", key="auto_posting_nav", use_container_width=True):
+            if st.button("自動投稿", key="auto_posting_nav", use_container_width=True):
                 st.switch_page("pages/auto_posting.py")
-            if st.button("📋 ツール一覧", key="marketing_tools_list_nav", use_container_width=True):
+            if st.button("スケジューラー制御", key="scheduler_nav", use_container_width=True):
+                st.switch_page("pages/scheduler_control.py")
+            if st.button("ユーザーマニュアル", key="user_manual_nav", use_container_width=True):
+                st.switch_page("pages/user_manual.py")
+            if st.button("ツール一覧", key="marketing_tools_list_nav", use_container_width=True):
                 st.switch_page("pages/marketing_tools_list.py")
         
         st.markdown("---")
