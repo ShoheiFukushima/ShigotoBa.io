@@ -91,6 +91,16 @@ st.markdown("""
 st.markdown("# 🎨 広告マーケティングツール一覧")
 st.markdown("コンテンツ制作・広告運用・マーケティング実行に必要なツールを整理して表示します")
 
+# サイドバー
+try:
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from components.sidebar import render_sidebar
+    render_sidebar()
+except ImportError:
+    pass
+
 # ホームに戻るボタン
 if st.button("🏠 ホームに戻る", type="secondary"):
     st.switch_page("app.py")

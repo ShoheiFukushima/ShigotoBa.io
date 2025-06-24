@@ -91,6 +91,16 @@ st.markdown("""
 st.markdown("# 🏗️ 新規開発ツール一覧")
 st.markdown("プロジェクト開発・管理に必要なツールを整理して表示します")
 
+# サイドバー
+try:
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from components.sidebar import render_sidebar
+    render_sidebar()
+except ImportError:
+    pass
+
 # ホームに戻るボタン
 if st.button("🏠 ホームに戻る", type="secondary"):
     st.switch_page("app.py")
