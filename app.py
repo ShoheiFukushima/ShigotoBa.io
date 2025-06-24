@@ -36,10 +36,22 @@ st.markdown("""
         align-items: center;
         justify-content: space-between;
         padding: 0 20px;
-        z-index: 1000;
+        z-index: 10000;  /* 最上位レイヤー */
         max-width: 1080px;
         margin: 0 auto;
         width: 100%;
+    }
+    
+    /* Streamlitのサイドバーのz-indexを調整 */
+    section[data-testid="stSidebar"] {
+        z-index: 9999;  /* ヘッダーの次のレイヤー */
+        top: 34px !important;  /* ヘッダーの高さ分下げる */
+        height: calc(100vh - 34px) !important;
+    }
+    
+    /* サイドバーの内容もヘッダー分下げる */
+    section[data-testid="stSidebar"] > div:first-child {
+        padding-top: 10px;
     }
     
     .header-title {
@@ -60,6 +72,14 @@ st.markdown("""
     /* メインコンテンツのマージン調整 */
     .main {
         margin-top: 34px;
+        position: relative;
+        z-index: 1;  /* ベースレイヤー */
+    }
+    
+    /* メインコンテンツエリアもヘッダー分調整 */
+    .stMain {
+        top: 34px !important;
+        position: relative;
     }
     
     /* ウィジェットカード */
