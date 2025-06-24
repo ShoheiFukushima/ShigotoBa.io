@@ -35,8 +35,6 @@ def render_header():
             justify-content: space-between;
             padding: 0 20px;
             z-index: 10000;  /* 最上位レイヤー */
-            max-width: 1080px;
-            margin: 0 auto;
             width: 100%;
         }
         
