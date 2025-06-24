@@ -565,7 +565,7 @@ with st.sidebar:
     st.header("⚡ クイックアクション")
     
     if st.button("➕ 新規プロジェクト", type="primary", use_container_width=True):
-        st.switch_page("development_room.py")
+        st.switch_page("pages/development_room.py")
     
     if st.button("📝 新規TODO追加", use_container_width=True):
         st.info("TODO追加機能は開発中です")
