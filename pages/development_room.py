@@ -700,13 +700,17 @@ with st.sidebar:
     if st.session_state.projects:
         recent_projects = sorted(
             st.session_state.projects.values(),
-            key=lambda x: x['created_at'],
+            key=lambda x: x.get('created_at', '2024-01-01'),
             reverse=True
         )[:3]
         
         for project in recent_projects:
             st.write(f"📋 {project['name']}")
-            st.caption(f"作成: {project['created_at'][:10]}")
+            created_at = project.get('created_at', '不明')
+            if created_at != '不明':
+                st.caption(f"作成: {created_at[:10]}")
+            else:
+                st.caption("作成日: 不明")
     else:
         st.info("まだプロジェクトがありません")
     
