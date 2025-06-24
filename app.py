@@ -23,6 +23,45 @@ st.markdown("""
         background-color: #0e1117;
     }
     
+    /* 固定ヘッダー */
+    .fixed-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 34px;
+        background-color: #1a1f2e;
+        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        z-index: 1000;
+        max-width: 1080px;
+        margin: 0 auto;
+        width: 100%;
+    }
+    
+    .header-title {
+        font-size: 11px;
+        color: #e2e8f0;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+    
+    .header-info {
+        font-size: 11px;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    /* メインコンテンツのマージン調整 */
+    .main {
+        margin-top: 34px;
+    }
+    
     /* ウィジェットカード */
     .widget-card {
         background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
@@ -82,6 +121,23 @@ elif current_hour < 17:
     greeting = "こんにちは"
 else:
     greeting = "こんばんは"
+
+# ヘッダー
+try:
+    from components.header import render_header
+    render_header()
+except ImportError:
+    # フォールバック
+    st.markdown(f"""
+    <div class="fixed-header">
+        <span class="header-title">SHIGOTOBA.IO - マーケティング自動化プラットフォーム</span>
+        <div class="header-info">
+            <span>プロジェクト: {st.session_state.current_project if hasattr(st.session_state, 'current_project') and st.session_state.current_project else 'なし'}</span>
+            <span>{datetime.now().strftime('%Y/%m/%d %H:%M')}</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown('<div class="main">', unsafe_allow_html=True)
 
 # ヘッダー
 st.markdown(f'<h1 class="greeting">{greeting} 👋</h1>', unsafe_allow_html=True)
@@ -273,3 +329,10 @@ except ImportError:
             st.metric("完了タスク", "42", "+12")
             st.metric("生成コンテンツ", "156", "+34")
             st.metric("投稿数", "28", "+7")
+
+# メインコンテンツdivを閉じる
+try:
+    from components.header import close_main_content
+    close_main_content()
+except ImportError:
+    st.markdown('</div>', unsafe_allow_html=True)
