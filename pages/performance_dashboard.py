@@ -743,11 +743,12 @@ with alert_cols[1]:
     st.markdown("#### ✅ 好調な指標")
     
     # エンゲージメントが高い場合
-    if engagement_rate > 15:
+    engagement_check = engagement_rate_value if 'engagement_rate_value' in locals() else (engagement_rate.iloc[-1] if isinstance(engagement_rate, pd.Series) and not engagement_rate.empty else 0)
+    if engagement_check > 15:
         st.markdown(f"""
         <div class="alert-box success-box">
             <strong>高エンゲージメント</strong><br>
-            エンゲージメント率が{engagement_rate:.1f}%と好調です。<br>
+            エンゲージメント率が{engagement_check:.1f}%と好調です。<br>
             この勢いを維持しましょう。
         </div>
         """, unsafe_allow_html=True)

@@ -10,7 +10,7 @@ test.describe('Marketing Flow Dashboard - Basic UI Tests', () => {
     await page.waitForLoadState('networkidle');
     
     // Streamlitアプリが完全に読み込まれるまで追加で待機
-    await page.waitForSelector('h1:has-text("Marketing Flow Dashboard")', { timeout: 30000 });
+    await page.waitForSelector('h1', { timeout: 30000 });
     
     // 追加で少し待機（Streamlitの動的コンテンツ読み込みのため）
     await page.waitForTimeout(2000);
@@ -18,96 +18,96 @@ test.describe('Marketing Flow Dashboard - Basic UI Tests', () => {
 
   test('should load dashboard with correct title', async ({ page }) => {
     // タイトルの確認（実際のタイトルに合わせて修正）
-    await expect(page).toHaveTitle('Marketing Flow Dashboard');
+    await expect(page).toHaveTitle('shigotoba.io - マーケティング自動化');
     
-    // メインタイトルの確認
-    const title = page.locator('h1:has-text("Marketing Flow Dashboard")');
+    // メインタイトルの確認（時間によって変わる挨拶を確認）
+    const title = page.locator('h1');
     await expect(title).toBeVisible();
     
-    // サブタイトルの確認
-    const subtitle = page.locator('text=競合インテリジェンス統合型マーケティング自動化フロー');
-    await expect(subtitle).toBeVisible();
+    // 挨拶の内容を確認（おはようございます、こんにちは、こんばんは のいずれか）
+    const titleText = await title.textContent();
+    expect(titleText).toMatch(/(おはようございます|こんにちは|こんばんは)/);
   });
 
   test('should show project management section', async ({ page }) => {
-    // プロジェクト管理エクスパンダーの確認
-    const projectManager = page.locator('text=📂 プロジェクト管理');
-    await expect(projectManager).toBeVisible();
+    // プロジェクト管理室ボタンの確認（より具体的なテキストで検索）
+    const projectManagerButton = page.locator('button').filter({ hasText: '管理室' });
+    await expect(projectManagerButton).toBeVisible();
     
-    // 新規プロジェクト作成の案内メッセージ
-    const guidance = page.locator('text=右上の「プロジェクト管理」から新規プロジェクトを作成してください');
-    await expect(guidance).toBeVisible();
+    // サイドバーのクイックアクションの確認
+    const newProjectButton = page.locator('button').filter({ hasText: '新規プロジェクト' });
+    await expect(newProjectButton).toBeVisible();
   });
 
-  test('should display 8 flow stages', async ({ page }) => {
-    // 8つのフローステージボタンの確認
-    const stages = [
-      { emoji: '📝', text: 'プロダクト入力' },
-      { emoji: '🔍', text: '調査フェーズ' }, 
-      { emoji: '📊', text: 'ベンチマーク策定' },
-      { emoji: '💡', text: 'ベネフィット決定' },
-      { emoji: '🎯', text: 'マーケティング施策' },
-      { emoji: '✍️', text: 'コンテンツ作成' },
-      { emoji: '🚀', text: 'デプロイメント' },
-      { emoji: '📈', text: '測定・分析' }
+  test('should display main category buttons', async ({ page }) => {
+    // メインカテゴリボタンの確認
+    const categories = [
+      '開発室',
+      'プロダクト',
+      'A/Bテスト', 
+      'パフォーマンス',
+      'AI Creative',
+      'リアルタイム',
+      'マニュアル',
+      '設定'
     ];
     
-    for (const stage of stages) {
-      // 改行を含むテキストでボタンを検索
-      const stageButton = page.locator('button').filter({ hasText: stage.text });
-      await expect(stageButton).toBeVisible();
+    for (const category of categories) {
+      // 各カテゴリのボタンを検索
+      const categoryButton = page.locator('button').filter({ hasText: category });
+      await expect(categoryButton).toBeVisible();
     }
     
-    // 総ボタン数の確認（少なくとも8個のステージボタン + その他）
+    // 総ボタン数の確認（少なくとも8個以上）
     const allButtons = page.locator('button');
     const buttonCount = await allButtons.count();
     expect(buttonCount).toBeGreaterThanOrEqual(8);
   });
 
-  test('should show progress bar at 0%', async ({ page }) => {
-    // プログレスバーの確認（代替セレクタを使用）
-    const progressContainer = page.locator('.progress-container');
-    await expect(progressContainer).toBeVisible();
+  test('should show metrics cards', async ({ page }) => {
+    // メトリクスカードの確認
+    const metricsElements = [
+      'アクティブプロジェクト',
+      '未完了タスク',
+      '今週の成果',
+      '効率スコア'
+    ];
     
-    // プログレスバー内に0%があるかを確認（hiddenでも存在することを確認）
-    const progressBar = page.locator('.progress-bar');
-    await expect(progressBar).toBeAttached(); // visible ではなく attached を使用
-    
-    // プログレスバー内のテキストを確認
-    const progressBarContent = await progressBar.textContent();
-    expect(progressBarContent?.trim()).toContain('0%');
-  });
-
-  test('should show sidebar with project stack', async ({ page }) => {
-    // サイドバーが閉じている場合があるので、サイドバートグルボタンをクリック
-    // 空のテキストでheaderNoPaddingのdata-testidを持つボタンがサイドバートグル
-    const sidebarToggle = page.locator('button[data-testid="stBaseButton-headerNoPadding"]');
-    
-    try {
-      // サイドバートグルをクリック
-      await sidebarToggle.click();
-      await page.waitForTimeout(1500); // サイドバーアニメーション待機
-    } catch (error) {
-      // トグルボタンが見つからない場合はスキップ
-      console.log('Sidebar toggle not found, checking if sidebar is already open');
+    for (const metric of metricsElements) {
+      // 各メトリクスの存在を確認
+      const metricElement = page.locator(`text=${metric}`);
+      await expect(metricElement).toBeVisible();
     }
-    
-    // プロジェクトスタックヘッダーを確認（サイドバーを開いた後）
-    const stackHeader = page.locator('text=📂 プロジェクトスタック');
-    await expect(stackHeader).toBeVisible({ timeout: 10000 });
-    
-    // フロー全体図ヘッダー
-    const flowHeader = page.locator('text=🗺️ フロー全体図');
-    await expect(flowHeader).toBeVisible();
-    
-    // プロジェクトがない場合のメッセージ
-    const noProjectsMessage = page.locator('text=📝 プロジェクトがありません');
-    await expect(noProjectsMessage).toBeVisible();
   });
 
-  test('should show warning when no project selected', async ({ page }) => {
-    // プロジェクト未選択時の警告メッセージ
-    const warning = page.locator('text=⚠️ プロジェクトを選択または作成してください');
-    await expect(warning).toBeVisible();
+  test('should show sidebar with quick actions', async ({ page }) => {
+    // サイドバーのクイックアクションヘッダーを確認
+    const quickActionsHeader = page.locator('text=⚡ クイックアクション');
+    await expect(quickActionsHeader).toBeVisible();
+    
+    // 統計セクション
+    const statsHeader = page.locator('text=📊 今週の統計');
+    await expect(statsHeader).toBeVisible();
+    
+    // 通知セクション
+    const notificationsHeader = page.locator('text=🔔 通知');
+    await expect(notificationsHeader).toBeVisible();
+    
+    // サイドバーの統計データ確認（最初の要素のみ）
+    const completedTasks = page.locator('text=完了タスク').first();
+    await expect(completedTasks).toBeVisible();
+  });
+
+  test('should show document archive section', async ({ page }) => {
+    // ドキュメント書庫セクションの確認
+    const documentHeader = page.locator('text=📚 ドキュメント書庫');
+    await expect(documentHeader).toBeVisible();
+    
+    // ドキュメントカテゴリの確認
+    const manualCategory = page.locator('text=マニュアル・ガイド');
+    await expect(manualCategory).toBeVisible();
+    
+    const reportCategory = page.locator('text=レポート・分析');
+    await expect(reportCategory).toBeVisible();
   });
 });

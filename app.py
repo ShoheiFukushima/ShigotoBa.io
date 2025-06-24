@@ -52,146 +52,6 @@ st.markdown("""
         color: #3b82f6;
     }
     
-    /* スケジュールアイテム */
-    .schedule-item {
-        background: rgba(30, 41, 59, 0.5);
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        border-left: 3px solid #10b981;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .schedule-time {
-        color: #3b82f6;
-        font-weight: bold;
-        margin-right: 15px;
-    }
-    
-    /* TODOアイテム */
-    .todo-item {
-        background: rgba(30, 41, 59, 0.5);
-        padding: 12px;
-        border-radius: 8px;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        transition: all 0.2s;
-    }
-    
-    .todo-item:hover {
-        background: rgba(30, 41, 59, 0.8);
-    }
-    
-    .todo-checkbox {
-        margin-right: 10px;
-    }
-    
-    .todo-priority-high {
-        border-left: 3px solid #ef4444;
-    }
-    
-    .todo-priority-medium {
-        border-left: 3px solid #f59e0b;
-    }
-    
-    .todo-priority-low {
-        border-left: 3px solid #10b981;
-    }
-    
-    /* メールアイテム */
-    .email-item {
-        background: rgba(30, 41, 59, 0.5);
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    
-    .email-item:hover {
-        background: rgba(30, 41, 59, 0.8);
-    }
-    
-    .email-unread {
-        border-left: 3px solid #3b82f6;
-        font-weight: bold;
-    }
-    
-    .email-subject {
-        color: #e2e8f0;
-        font-size: 1.1rem;
-        margin-bottom: 5px;
-    }
-    
-    .email-sender {
-        color: #94a3b8;
-        font-size: 0.9rem;
-    }
-    
-    /* リンクカード */
-    .link-card {
-        background: rgba(30, 41, 59, 0.8);
-        padding: 20px;
-        border-radius: 10px;
-        text-align: center;
-        transition: all 0.3s;
-        cursor: pointer;
-        height: 120px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-    }
-    
-    .link-card:hover {
-        background: rgba(59, 130, 246, 0.2);
-        transform: translateY(-5px);
-    }
-    
-    .link-icon {
-        font-size: 2rem;
-        margin-bottom: 10px;
-    }
-    
-    .link-title {
-        color: #e2e8f0;
-        font-weight: bold;
-    }
-    
-    /* ドキュメントアイテム */
-    .doc-item {
-        background: rgba(30, 41, 59, 0.5);
-        padding: 12px 20px;
-        border-radius: 8px;
-        margin-bottom: 8px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    
-    .doc-item:hover {
-        background: rgba(30, 41, 59, 0.8);
-    }
-    
-    .doc-icon {
-        margin-right: 10px;
-    }
-    
-    /* ステータスバッジ */
-    .status-badge {
-        background: rgba(59, 130, 246, 0.2);
-        color: #3b82f6;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: bold;
-    }
-    
     /* グリーディングメッセージ */
     .greeting {
         font-size: 2rem;
@@ -246,11 +106,11 @@ with col4:
 
 st.markdown("---")
 
-# メインコンテンツ - 1列レイアウト（TODOとプロジェクト状況のみ）
+# メインコンテンツ
 main_col1, main_col2 = st.columns([3, 2])
 
 with main_col1:
-    # 最近のアクティビティ
+    # システム活動概要
     st.markdown("""
     <div class="widget-card">
         <div class="widget-header">
@@ -280,7 +140,6 @@ with main_col2:
     
     for todo in st.session_state.todos:
         if not todo['done']:
-            priority_class = f"todo-priority-{todo['priority']}"
             if st.checkbox(todo['text'], key=f"todo_{todo['id']}"):
                 todo['done'] = True
                 st.rerun()
@@ -306,286 +165,111 @@ with main_col2:
     
     st.markdown("</div>", unsafe_allow_html=True)
 
-st.markdown("---")
-
-# 開発リンク集
-st.markdown("### 🚀 クイックアクセス")
-
-# カテゴリ1: プロジェクト開発系
-st.markdown("#### 🏗️ プロジェクト開発")
-dev_links = [
-    {"icon": "🏗️", "title": "開発室", "page": "development_room"},
-    {"icon": "📊", "title": "プロジェクト\n管理室", "page": "project_management"},
-    {"icon": "📦", "title": "プロダクト\n管理", "page": "product_management"},
-    {"icon": "🧪", "title": "A/Bテスト", "page": "ab_testing"}
-]
-
-dev_cols = st.columns(4)
-for idx, link in enumerate(dev_links):
-    with dev_cols[idx]:
-        if st.button(f"{link['icon']}\n\n{link['title']}", key=f"dev_{idx}", use_container_width=True):
-            st.switch_page(f"pages/{link['page']}.py")
-
-# カテゴリ2: プロジェクト運営系
-st.markdown("#### 📈 プロジェクト運営・分析")
-operation_links = [
-    {"icon": "📈", "title": "パフォーマンス", "page": "performance_dashboard"},
-    {"icon": "🎯", "title": "アトリビューション\n分析", "page": "attribution_analysis"},
-    {"icon": "🛤️", "title": "カスタマー\nジャーニー", "page": "customer_journey_engine"},
-    {"icon": "💬", "title": "AIチャット", "page": "realtime_chat"}
-]
-
-op_cols = st.columns(4)
-for idx, link in enumerate(operation_links):
-    with op_cols[idx]:
-        if st.button(f"{link['icon']}\n\n{link['title']}", key=f"op_{idx}", use_container_width=True):
-            st.switch_page(f"pages/{link['page']}.py")
-
-# カテゴリ3: 広告・マーケティング実行系
-st.markdown("#### 🎨 広告・マーケティング実行")
-marketing_links = [
-    {"icon": "🎨", "title": "AI Creative\nStudio", "page": "ai_creative_studio"},
-    {"icon": "⚡", "title": "リアルタイム\n最適化", "page": "realtime_ad_optimizer"},
-    {"icon": "🌐", "title": "マルチ\nプラットフォーム", "page": "multi_platform_manager"},
-    {"icon": "📚", "title": "マニュアル", "page": "user_manual"},
-    {"icon": "⚙️", "title": "設定", "page": "ai_settings"}
-]
-
-marketing_cols = st.columns(5)
-for idx, link in enumerate(marketing_links):
-    with marketing_cols[idx]:
-        if st.button(f"{link['icon']}\n\n{link['title']}", key=f"marketing_{idx}", use_container_width=True):
-            st.switch_page(f"pages/{link['page']}.py")
-
-st.markdown("---")
-
-# ドキュメント書庫
-st.markdown("### 📚 ドキュメント書庫")
-
-# ツリー表示用のスタイル追加
-st.markdown("""
-<style>
-    .tree-container {
-        background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
-        border-radius: 20px;
-        padding: 25px;
-        margin: 20px 0;
-        border: 2px solid rgba(59, 130, 246, 0.2);
-    }
-    
-    .tree-category {
-        margin-bottom: 20px;
-    }
-    
-    .tree-category-header {
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: #3b82f6;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-    }
-    
-    .tree-category-icon {
-        margin-right: 10px;
-        font-size: 1.3rem;
-    }
-    
-    .tree-item {
-        margin-left: 30px;
-        padding: 8px 15px;
-        border-left: 2px solid rgba(59, 130, 246, 0.3);
-        position: relative;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: all 0.2s;
-    }
-    
-    .tree-item:hover {
-        background: rgba(59, 130, 246, 0.1);
-        border-left-color: #3b82f6;
-    }
-    
-    .tree-item::before {
-        content: '└─';
-        position: absolute;
-        left: -15px;
-        color: rgba(59, 130, 246, 0.5);
-    }
-    
-    .tree-item-name {
-        display: flex;
-        align-items: center;
-        color: #e2e8f0;
-    }
-    
-    .tree-item-icon {
-        margin-right: 8px;
-    }
-    
-    .tree-item-size {
-        color: #94a3b8;
-        font-size: 0.85rem;
-    }
-    
-    .tree-subcategory {
-        margin-left: 20px;
-        margin-bottom: 15px;
-    }
-    
-    .tree-subcategory-header {
-        font-size: 1rem;
-        color: #60a5fa;
-        margin-bottom: 8px;
-        font-weight: 500;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# ツリー構造でドキュメントを表示
-st.markdown("""
-<div class="tree-container">
-    <!-- カテゴリ1: マニュアル・ガイド -->
-    <div class="tree-category">
-        <div class="tree-category-header">
-            <span class="tree-category-icon">📋</span>
-            マニュアル・ガイド
-        </div>
-        <div class="tree-item">
-            <span class="tree-item-name">
-                <span class="tree-item-icon">📄</span>
-                システム利用ガイド
-            </span>
-            <span class="tree-item-size">PDF・2.3MB</span>
-        </div>
-        <div class="tree-item">
-            <span class="tree-item-name">
-                <span class="tree-item-icon">📄</span>
-                マーケティング戦略テンプレート
-            </span>
-            <span class="tree-item-size">DOCX・856KB</span>
-        </div>
-        <div class="tree-item">
-            <span class="tree-item-name">
-                <span class="tree-item-icon">📄</span>
-                SNS運用マニュアル
-            </span>
-            <span class="tree-item-size">PDF・1.2MB</span>
-        </div>
-        <div class="tree-item">
-            <span class="tree-item-name">
-                <span class="tree-item-icon">📄</span>
-                KPI設定ガイドライン
-            </span>
-            <span class="tree-item-size">PDF・524KB</span>
-        </div>
-    </div>
-    
-    <!-- カテゴリ2: レポート・分析 -->
-    <div class="tree-category">
-        <div class="tree-category-header">
-            <span class="tree-category-icon">📊</span>
-            レポート・分析
-        </div>
-        <div class="tree-item">
-            <span class="tree-item-name">
-                <span class="tree-item-icon">📊</span>
-                2024年Q4実績レポート
-            </span>
-            <span class="tree-item-size">XLSX・3.1MB</span>
-        </div>
-        <div class="tree-item">
-            <span class="tree-item-name">
-                <span class="tree-item-icon">📄</span>
-                競合分析まとめ_202501
-            </span>
-            <span class="tree-item-size">PDF・4.5MB</span>
-        </div>
-        <div class="tree-item">
-            <span class="tree-item-name">
-                <span class="tree-item-icon">📈</span>
-                市場調査データ
-            </span>
-            <span class="tree-item-size">CSV・892KB</span>
-        </div>
-        <div class="tree-item">
-            <span class="tree-item-name">
-                <span class="tree-item-icon">📊</span>
-                ROI分析シート
-            </span>
-            <span class="tree-item-size">XLSX・1.8MB</span>
-        </div>
-    </div>
-    
-    <!-- カテゴリ3: クリエイティブ素材 -->
-    <div class="tree-category">
-        <div class="tree-category-header">
-            <span class="tree-category-icon">🎨</span>
-            クリエイティブ素材
-        </div>
-        <div class="tree-item">
-            <span class="tree-item-name">
-                <span class="tree-item-icon">📄</span>
-                ブランドガイドライン
-            </span>
-            <span class="tree-item-size">PDF・8.2MB</span>
-        </div>
-        <div class="tree-item">
-            <span class="tree-item-name">
-                <span class="tree-item-icon">🎨</span>
-                ロゴ素材集
-            </span>
-            <span class="tree-item-size">ZIP・15.3MB</span>
-        </div>
-        <div class="tree-item">
-            <span class="tree-item-name">
-                <span class="tree-item-icon">🎨</span>
-                SNSテンプレート
-            </span>
-            <span class="tree-item-size">PSD・23.1MB</span>
-        </div>
-        <div class="tree-item">
-            <span class="tree-item-name">
-                <span class="tree-item-icon">📊</span>
-                プレゼン資料雛形
-            </span>
-            <span class="tree-item-size">PPTX・5.4MB</span>
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
 # サイドバー
-with st.sidebar:
-    st.header("⚡ クイックアクション")
-    
-    if st.button("➕ 新規プロジェクト", type="primary", use_container_width=True):
-        st.switch_page("pages/development_room.py")
-    
-    if st.button("📝 新規TODO追加", use_container_width=True):
-        st.info("TODO追加機能は開発中です")
-    
-    if st.button("📧 メール作成", use_container_width=True):
-        st.info("メール作成機能は開発中です")
-    
-    st.markdown("---")
-    
-    st.header("📊 今週の統計")
-    
-    st.metric("完了タスク", "42", "+12")
-    st.metric("生成コンテンツ", "156", "+34")
-    st.metric("投稿数", "28", "+7")
-    
-    st.markdown("---")
-    
-    st.header("🔔 通知")
-    
-    notifications = [
-        {"text": "新製品キャンペーンが承認されました", "time": "5分前"},
-        {"text": "競合分析レポートが更新されました", "time": "1時間前"},
-        {"text": "SNS投稿がスケジュールされました", "time": "3時間前"}
-    ]
-    
-    for notif in notifications:
-        st.info(f"**{notif['text']}**\n\n_{notif['time']}_")
+try:
+    from components.sidebar import render_sidebar
+    render_sidebar()
+except ImportError:
+    # フォールバック: 元のサイドバー
+    with st.sidebar:
+        # プロジェクト選択
+        st.markdown("### 📁 プロジェクト選択")
+        
+        # サンプルプロジェクト一覧
+        if 'projects' not in st.session_state:
+            st.session_state.projects = {
+                "project_1": {"name": "ECサイトリニューアル", "type": "dev", "status": "進行中"},
+                "project_2": {"name": "新製品キャンペーン", "type": "marketing", "status": "企画中"},
+                "project_3": {"name": "ユーザー行動分析", "type": "analysis", "status": "分析中"},
+                "project_4": {"name": "SaaSプラットフォーム開発", "type": "dev", "status": "開発中"},
+                "project_5": {"name": "価格戦略最適化", "type": "analysis", "status": "検証中"}
+            }
+        
+        # プロジェクト選択
+        project_options = ["プロジェクトを選択..."] + [f"{pid}: {data['name']}" for pid, data in st.session_state.projects.items()]
+        selected_project = st.selectbox(
+            "現在のプロジェクト",
+            project_options,
+            key="selected_project"
+        )
+        
+        # 選択されたプロジェクトの情報を保存
+        if selected_project != "プロジェクトを選択...":
+            project_id = selected_project.split(":")[0]
+            st.session_state.current_project = project_id
+            project_data = st.session_state.projects[project_id]
+            
+            # プロジェクト詳細表示
+            st.markdown(f"""
+            <div style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); 
+                        padding: 15px; border-radius: 10px; margin: 10px 0;
+                        border: 1px solid rgba(59, 130, 246, 0.2);">
+                <p style="margin: 0; color: #3b82f6; font-weight: bold;">📊 {project_data['name']}</p>
+                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 0.9rem;">ステータス: {project_data['status']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.session_state.current_project = None
+        
+        st.markdown("---")
+        
+        # アコーディオンメニュー
+        with st.expander("🏗️ 新規開発", expanded=False):
+            if st.button("🏗️ 開発室", key="dev_room_nav", use_container_width=True):
+                st.switch_page("pages/development_room.py")
+            if st.button("📊 プロジェクト管理室", key="project_mgmt_nav", use_container_width=True):
+                st.switch_page("pages/project_management.py")
+            if st.button("📦 プロダクト管理", key="product_mgmt_nav", use_container_width=True):
+                st.switch_page("pages/product_management.py")
+            if st.button("🧪 A/Bテスト", key="ab_testing_nav", use_container_width=True):
+                st.switch_page("pages/ab_testing.py")
+            if st.button("📋 ツール一覧", key="dev_tools_list_nav", use_container_width=True):
+                st.switch_page("pages/dev_tools_list.py")
+        
+        with st.expander("📊 運営・分析", expanded=False):
+            if st.button("📈 パフォーマンスダッシュボード", key="performance_nav", use_container_width=True):
+                st.switch_page("pages/performance_dashboard.py")
+            if st.button("🎯 アトリビューション分析", key="attribution_nav", use_container_width=True):
+                st.switch_page("pages/attribution_analysis.py")
+            if st.button("🛤️ カスタマージャーニー", key="customer_journey_nav", use_container_width=True):
+                st.switch_page("pages/customer_journey_engine.py")
+            if st.button("📊 プロダクト分析", key="product_analysis_nav", use_container_width=True):
+                st.switch_page("pages/product_analysis.py")
+            if st.button("💬 リアルタイムAIチャット", key="ai_chat_nav", use_container_width=True):
+                st.switch_page("pages/realtime_chat.py")
+            if st.button("📋 ツール一覧", key="analysis_tools_list_nav", use_container_width=True):
+                st.switch_page("pages/analysis_tools_list.py")
+        
+        with st.expander("🎨 広告・マーケ", expanded=False):
+            if st.button("🎨 AI Creative Studio", key="ai_creative_nav", use_container_width=True):
+                st.switch_page("pages/ai_creative_studio.py")
+            if st.button("⚡ リアルタイム広告最適化", key="realtime_ad_nav", use_container_width=True):
+                st.switch_page("pages/realtime_ad_optimizer.py")
+            if st.button("💰 価格戦略コンサルティング", key="pricing_strategy_nav", use_container_width=True):
+                st.switch_page("pages/pricing_strategy.py")
+            if st.button("🌐 マルチプラットフォーム管理", key="multi_platform_nav", use_container_width=True):
+                st.switch_page("pages/multi_platform_manager.py")
+            if st.button("🚀 自動投稿", key="auto_posting_nav", use_container_width=True):
+                st.switch_page("pages/auto_posting.py")
+            if st.button("📋 ツール一覧", key="marketing_tools_list_nav", use_container_width=True):
+                st.switch_page("pages/marketing_tools_list.py")
+        
+        st.markdown("---")
+        
+        # プロジェクト関連情報
+        if hasattr(st.session_state, 'current_project') and st.session_state.current_project:
+            current_project_data = st.session_state.projects[st.session_state.current_project]
+            st.markdown("### 📈 プロジェクト情報")
+            if current_project_data['type'] == 'dev':
+                st.info("🏗️ **推奨ツール**: 開発室、プロジェクト管理室、A/Bテスト")
+            elif current_project_data['type'] == 'marketing':
+                st.info("🎨 **推奨ツール**: AI Creative Studio、価格戦略、マルチプラットフォーム管理")
+            elif current_project_data['type'] == 'analysis':
+                st.info("📊 **推奨ツール**: パフォーマンスダッシュボード、アトリビューション分析")
+            st.metric("プロジェクト進捗", "65%", "+15%")
+            st.metric("今週のタスク", "8", "+3")
+        else:
+            st.markdown("### 📊 今週の統計")
+            st.metric("完了タスク", "42", "+12")
+            st.metric("生成コンテンツ", "156", "+34")
+            st.metric("投稿数", "28", "+7")
