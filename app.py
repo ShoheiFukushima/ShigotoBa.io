@@ -1,419 +1,209 @@
 #!/usr/bin/env python3
 """
-shigotoba.io - AI-Powered Marketing Automation Platform
-Main entry point for Streamlit Cloud
+shigotoba.io - マーケティング自動化プラットフォーム
+シンプルで堅牢な構造、Streamlitの標準機能を最大限活用
+リファクタリング済み - 2024年版
 """
 
 import streamlit as st
 from datetime import datetime
 
-# ページ設定
+# ページ設定（これが最初に来る必要がある）
 st.set_page_config(
-    page_title="shigotoba.io - マーケティング自動化",
-    page_icon="🏠",
+    page_title="shigotoba.io",
+    page_icon="🚀",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# カスタムCSS
+# セッション状態の初期化
+if 'current_project' not in st.session_state:
+    st.session_state.current_project = None
+
+if 'projects' not in st.session_state:
+    st.session_state.projects = {
+        "project_1": {"name": "ECサイトリニューアル", "type": "dev", "status": "進行中"},
+        "project_2": {"name": "新製品キャンペーン", "type": "marketing", "status": "企画中"},
+        "project_3": {"name": "ユーザー行動分析", "type": "analysis", "status": "分析中"},
+        "project_4": {"name": "SaaSプラットフォーム開発", "type": "dev", "status": "開発中"},
+        "project_5": {"name": "価格戦略最適化", "type": "analysis", "status": "検証中"}
+    }
+
+# 共通CSS設定（最適化済み）
 st.markdown("""
 <style>
-    /* ダークモード設定 */
+    /* グローバルスタイル */
     .stApp {
         background-color: #0e1117;
     }
     
-    /* 固定ヘッダー */
-    .fixed-header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 34px;
-        background-color: #1a1f2e;
-        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 20px;
-        z-index: 10000;  /* 最上位レイヤー */
-        width: 100%;
+    /* サイドバー最適化 */
+    section[data-testid="stSidebar"] {
+        background-color: #1e2329;
+        border-right: 1px solid #2a3441;
     }
     
-    /* Streamlitのサイドバーのz-indexを調整 */
-    section[data-testid="stSidebar"] {
-        z-index: 9999;  /* ヘッダーの次のレイヤー */
-        top: 34px !important;  /* ヘッダーの高さ分下げる */
-        height: calc(100vh - 34px) !important;
+    section[data-testid="stSidebar"] button {
+        width: 100%;
+        text-align: left;
+        margin-bottom: 0.25rem;
+        background-color: transparent;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+    }
+    
+    section[data-testid="stSidebar"] button:hover {
+        background-color: rgba(34, 197, 94, 0.1);
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+    
+    /* プロジェクトカード最適化 */
+    .project-card {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
         transition: all 0.3s ease;
     }
     
-    /* サイドバーが折りたたまれた時 */
-    section[data-testid="stSidebar"][aria-expanded="false"] {
-        width: 30px !important;
-        min-width: 30px !important;
-        overflow: hidden;
-        transition: width 0.3s ease;
-        border-right: 1px solid rgba(59, 130, 246, 0.3);
-    }
-    
-    /* 右端7ピクセルのホバーエリア */
-    section[data-testid="stSidebar"][aria-expanded="false"]::after {
-        content: "";
-        position: absolute;
-        right: 0;
-        top: 34px;
-        width: 7px;
-        height: calc(100% - 34px);
-        background: transparent;
-        cursor: pointer;
-        z-index: 10001;
-    }
-    
-    /* ホバー時の視覚的フィードバック */
-    section[data-testid="stSidebar"][aria-expanded="false"]::after:hover {
-        background: rgba(59, 130, 246, 0.2);
-    }
-    
-    /* ホバー時にサイドバーを展開 */
-    section[data-testid="stSidebar"][aria-expanded="false"]:hover {
-        width: 300px !important;
-        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
-    }
-    
-    /* サイドバーの内容もヘッダー分下げる */
-    section[data-testid="stSidebar"] > div:first-child {
-        padding-top: 10px;
-    }
-    
-    /* サイドバーのトグルボタンを調整 */
-    button[kind="header"] {
-        top: 44px !important;  /* ヘッダーの下に配置 */
-        z-index: 9998;
-    }
-    
-    /* メインコンテンツエリアの調整 */
-    section.main > div {
-        padding-top: 34px !important;
-    }
-    
-    /* ヘッダーを常に表示 */
-    .stApp > header {
-        display: none;  /* Streamlitのデフォルトヘッダーを非表示 */
-    }
-    
-    /* 最小化時は全コンテンツを非表示 */
-    section[data-testid="stSidebar"][aria-expanded="false"] > div {
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    
-    /* ホバー時にコンテンツを表示 */
-    section[data-testid="stSidebar"][aria-expanded="false"]:hover > div {
-        opacity: 1;
-    }
-    
-    .header-title {
-        font-size: 11px;
-        color: #e2e8f0;
-        font-weight: 500;
-        letter-spacing: 0.5px;
-    }
-    
-    .header-info {
-        font-size: 11px;
-        color: #94a3b8;
-        display: flex;
-        align-items: center;
-        gap: 20px;
-    }
-    
-    /* メインコンテンツのマージン調整 */
-    .main {
-        margin-top: 34px;
-        position: relative;
-        z-index: 1;  /* ベースレイヤー */
-    }
-    
-    /* メインコンテンツエリアもヘッダー分調整 */
-    .stMain {
-        top: 34px !important;
-        position: relative;
-    }
-    
-    /* ウィジェットカード */
-    .widget-card {
-        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-        padding: 25px;
-        border-radius: 15px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        border: 1px solid rgba(59, 130, 246, 0.2);
-        transition: all 0.3s;
-    }
-    
-    .widget-card:hover {
+    .project-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+        box-shadow: 0 8px 24px rgba(34, 197, 94, 0.15);
+        border-color: rgba(34, 197, 94, 0.4);
     }
     
-    .widget-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-    }
-    
-    .widget-title {
-        font-size: 1.3rem;
-        font-weight: bold;
-        color: #3b82f6;
-    }
-    
-    /* グリーディングメッセージ */
-    .greeting {
-        font-size: 2rem;
-        font-weight: bold;
-        background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 10px;
+    /* メトリクス最適化 */
+    .metric-container {
+        background: rgba(30, 41, 59, 0.5);
+        border-radius: 8px;
+        padding: 1rem;
+        border: 1px solid rgba(34, 197, 94, 0.2);
     }
 </style>
 """, unsafe_allow_html=True)
 
-# セッション状態の初期化
-if 'todos' not in st.session_state:
-    st.session_state.todos = [
-        {"id": 1, "text": "マーケティングレポートの確認", "priority": "high", "done": False},
-        {"id": 2, "text": "新製品のキャンペーン企画書作成", "priority": "high", "done": False},
-        {"id": 3, "text": "SNS投稿スケジュールの更新", "priority": "medium", "done": False},
-        {"id": 4, "text": "競合分析データの収集", "priority": "medium", "done": True},
-        {"id": 5, "text": "チームミーティングの準備", "priority": "low", "done": False}
-    ]
-
-# 時間に応じた挨拶
-current_hour = datetime.now().hour
-if current_hour < 12:
-    greeting = "おはようございます"
-elif current_hour < 17:
-    greeting = "こんにちは"
-else:
-    greeting = "こんばんは"
-
-# ヘッダー
-try:
-    from components.header import render_header
-    render_header()
-except ImportError:
-    # フォールバック
-    st.markdown(f"""
-    <div class="fixed-header">
-        <span class="header-title">SHIGOTOBA.IO - マーケティング自動化プラットフォーム</span>
-        <div class="header-info">
-            <span>プロジェクト: {st.session_state.current_project if hasattr(st.session_state, 'current_project') and st.session_state.current_project else 'なし'}</span>
-            <span>{datetime.now().strftime('%Y/%m/%d %H:%M')}</span>
-        </div>
+# サイドバー（Streamlit標準機能を活用）
+with st.sidebar:
+    # ブランディング（最適化）
+    st.markdown("""
+    <div style="text-align: center; padding: 1rem 0; border-bottom: 1px solid #2a3441; margin-bottom: 1rem;">
+        <h2 style="color: #22c55e; margin: 0; font-size: 1.5rem;">🚀 SHIGOTOBA.IO</h2>
+        <p style="color: #94a3b8; margin: 0.5rem 0 0 0; font-size: 0.9rem; font-style: italic;">マーケティング自動化プラットフォーム</p>
+        <p style="color: #64748b; margin: 0.25rem 0 0 0; font-size: 0.8rem;">📅 {}</p>
     </div>
-    """, unsafe_allow_html=True)
-    st.markdown('<div class="main">', unsafe_allow_html=True)
-
-# ヘッダー
-st.markdown(f'<h1 class="greeting">{greeting} 👋</h1>', unsafe_allow_html=True)
-st.markdown(f"今日は {datetime.now().strftime('%Y年%m月%d日 %A')} です")
-
-# 上部のメトリクス
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    active_projects = len(st.session_state.get('projects', {}))
-    st.metric("アクティブプロジェクト", active_projects, "+2")
-
-with col2:
-    pending_todos = len([t for t in st.session_state.todos if not t['done']])
-    st.metric("未完了タスク", pending_todos, "-3")
-
-with col3:
-    st.metric("今週の成果", "24", "+8")
-
-with col4:
-    st.metric("効率スコア", "94%", "+5%")
-
-st.markdown("---")
+    """.format(datetime.now().strftime('%Y/%m/%d')), unsafe_allow_html=True)
+    
+    st.markdown("## 📁 プロジェクト")
+    
+    # プロジェクト選択
+    project_names = ["選択してください"] + [data['name'] for data in st.session_state.projects.values()]
+    selected = st.selectbox("現在の作業", project_names, label_visibility="collapsed")
+    
+    if selected != "選択してください":
+        for pid, data in st.session_state.projects.items():
+            if data['name'] == selected:
+                st.session_state.current_project = pid
+                st.info(f"📊 **{data['name']}**\nステータス: {data['status']}")
+                break
+    
+    st.markdown("---")
+    
+    # ナビゲーション（Streamlitのページ機能を説明）
+    st.markdown("## 🧭 ツール")
+    st.markdown("""
+    👈 左のページリストから選択するか、以下のクイックアクセスをご利用ください。
+    
+    ### 🏗️ 新規開発
+    - 開発室
+    - プロジェクト管理
+    - A/Bテスト
+    
+    ### 📊 運営・分析  
+    - パフォーマンス
+    - アトリビューション
+    - リアルタイムチャット
+    
+    ### 🎨 広告・マーケ
+    - AI Creative Studio
+    - 広告最適化
+    - 価格戦略
+    """)
+    
+    st.markdown("---")
+    
+    # 統計情報
+    st.markdown("### 📈 今週の成果")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("タスク", "42", "+12")
+        st.metric("投稿", "28", "+7")
+    with col2:
+        st.metric("コンテンツ", "156", "+34")
+        st.metric("効果", "89%", "+5%")
 
 # メインコンテンツ
-main_col1, main_col2 = st.columns([3, 2])
+st.title("🏠 ダッシュボード")
 
-with main_col1:
-    # システム活動概要
-    st.markdown("""
-    <div class="widget-card">
-        <div class="widget-header">
-            <span class="widget-title">📊 システム活動概要</span>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("""
-    <div style="padding: 20px;">
-        <p>🚀 <strong>マーケティング自動化システム</strong>が正常に動作中</p>
-        <p>🎯 <strong>AI機能</strong>: 広告最適化・コンテンツ生成・分析が利用可能</p>
-        <p>📈 <strong>統合管理</strong>: 複数プラットフォームを一元管理</p>
-        <p>🔧 <strong>カスタマイズ</strong>: あなたの業務に合わせて設定調整済み</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("</div>", unsafe_allow_html=True)
+# プロジェクト一覧
+st.markdown("## 📋 プロジェクト一覧")
 
-with main_col2:
-    # TODOリスト
-    st.markdown("""
-    <div class="widget-card">
-        <div class="widget-header">
-            <span class="widget-title">✅ TODO</span>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    for todo in st.session_state.todos:
-        if not todo['done']:
-            if st.checkbox(todo['text'], key=f"todo_{todo['id']}"):
-                todo['done'] = True
-                st.rerun()
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # プロジェクトステータス
-    st.markdown("""
-    <div class="widget-card">
-        <div class="widget-header">
-            <span class="widget-title">📊 プロジェクト状況</span>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    if 'projects' in st.session_state and st.session_state.projects:
-        for pid, project in list(st.session_state.projects.items())[:3]:
-            # flow_stageがない場合のデフォルト値
-            flow_stage = project.get('flow_stage', 3)  
-            progress = (flow_stage / 7) * 100
-            st.write(f"**{project['name']}**")
-            st.progress(progress / 100)
-            st.caption(f"Stage {flow_stage + 1}/8 - {progress:.0f}%")
-    else:
-        st.info("プロジェクトがありません")
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# サイドバー
-try:
-    from components.sidebar import render_sidebar
-    render_sidebar()
-except ImportError:
-    # フォールバック: 元のサイドバー
-    with st.sidebar:
-        # プロジェクト選択
-        st.markdown("### 📁 プロジェクト選択")
-        
-        # サンプルプロジェクト一覧
-        if 'projects' not in st.session_state:
-            st.session_state.projects = {
-                "project_1": {"name": "ECサイトリニューアル", "type": "dev", "status": "進行中"},
-                "project_2": {"name": "新製品キャンペーン", "type": "marketing", "status": "企画中"},
-                "project_3": {"name": "ユーザー行動分析", "type": "analysis", "status": "分析中"},
-                "project_4": {"name": "SaaSプラットフォーム開発", "type": "dev", "status": "開発中"},
-                "project_5": {"name": "価格戦略最適化", "type": "analysis", "status": "検証中"}
-            }
-        
-        # プロジェクト選択
-        project_options = ["プロジェクトを選択..."] + [f"{pid}: {data['name']}" for pid, data in st.session_state.projects.items()]
-        selected_project = st.selectbox(
-            "現在のプロジェクト",
-            project_options,
-            key="selected_project"
-        )
-        
-        # 選択されたプロジェクトの情報を保存
-        if selected_project != "プロジェクトを選択...":
-            project_id = selected_project.split(":")[0]
-            st.session_state.current_project = project_id
-            project_data = st.session_state.projects[project_id]
+cols = st.columns(3)
+for i, (pid, project) in enumerate(st.session_state.projects.items()):
+    with cols[i % 3]:
+        # プロジェクトカード
+        if project['type'] == 'dev':
+            icon = "🏗️"
+            color = "#3b82f6"
+        elif project['type'] == 'marketing':
+            icon = "🎨" 
+            color = "#8b5cf6"
+        else:
+            icon = "📊"
+            color = "#10b981"
             
-            # プロジェクト詳細表示
-            st.markdown(f"""
-            <div style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); 
-                        padding: 15px; border-radius: 10px; margin: 10px 0;
-                        border: 1px solid rgba(59, 130, 246, 0.2);">
-                <p style="margin: 0; color: #3b82f6; font-weight: bold;">📊 {project_data['name']}</p>
-                <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 0.9rem;">ステータス: {project_data['status']}</p>
+        st.markdown(f"""
+        <div class="project-card" style="border-color: {color}40;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <h3 style="color: {color}; margin: 0; font-size: 1.2rem;">{icon} {project['name']}</h3>
+                <span style="background-color: {color}20; color: {color}; 
+                      padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">
+                    {project['type'].upper()}
+                </span>
             </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.session_state.current_project = None
-        
-        st.markdown("---")
-        
-        # アコーディオンメニュー
-        with st.expander("🏗️ 新規開発", expanded=False):
-            if st.button("🏗️ 開発室", key="dev_room_nav", use_container_width=True):
-                st.switch_page("pages/development_room.py")
-            if st.button("📊 プロジェクト管理室", key="project_mgmt_nav", use_container_width=True):
-                st.switch_page("pages/project_management.py")
-            if st.button("📦 プロダクト管理", key="product_mgmt_nav", use_container_width=True):
-                st.switch_page("pages/product_management.py")
-            if st.button("🧪 A/Bテスト", key="ab_testing_nav", use_container_width=True):
-                st.switch_page("pages/ab_testing.py")
-            if st.button("📋 ツール一覧", key="dev_tools_list_nav", use_container_width=True):
-                st.switch_page("pages/dev_tools_list.py")
-        
-        with st.expander("📊 運営・分析", expanded=False):
-            if st.button("📈 パフォーマンスダッシュボード", key="performance_nav", use_container_width=True):
-                st.switch_page("pages/performance_dashboard.py")
-            if st.button("🎯 アトリビューション分析", key="attribution_nav", use_container_width=True):
-                st.switch_page("pages/attribution_analysis.py")
-            if st.button("🛤️ カスタマージャーニー", key="customer_journey_nav", use_container_width=True):
-                st.switch_page("pages/customer_journey_engine.py")
-            if st.button("📊 プロダクト分析", key="product_analysis_nav", use_container_width=True):
-                st.switch_page("pages/product_analysis.py")
-            if st.button("💬 リアルタイムAIチャット", key="ai_chat_nav", use_container_width=True):
-                st.switch_page("pages/realtime_chat.py")
-            if st.button("📋 ツール一覧", key="analysis_tools_list_nav", use_container_width=True):
-                st.switch_page("pages/analysis_tools_list.py")
-        
-        with st.expander("🎨 広告・マーケ", expanded=False):
-            if st.button("🎨 AI Creative Studio", key="ai_creative_nav", use_container_width=True):
-                st.switch_page("pages/ai_creative_studio.py")
-            if st.button("⚡ リアルタイム広告最適化", key="realtime_ad_nav", use_container_width=True):
-                st.switch_page("pages/realtime_ad_optimizer.py")
-            if st.button("💰 価格戦略コンサルティング", key="pricing_strategy_nav", use_container_width=True):
-                st.switch_page("pages/pricing_strategy.py")
-            if st.button("🌐 マルチプラットフォーム管理", key="multi_platform_nav", use_container_width=True):
-                st.switch_page("pages/multi_platform_manager.py")
-            if st.button("🚀 自動投稿", key="auto_posting_nav", use_container_width=True):
-                st.switch_page("pages/auto_posting.py")
-            if st.button("📋 ツール一覧", key="marketing_tools_list_nav", use_container_width=True):
-                st.switch_page("pages/marketing_tools_list.py")
-        
-        st.markdown("---")
-        
-        # プロジェクト関連情報
-        if hasattr(st.session_state, 'current_project') and st.session_state.current_project:
-            current_project_data = st.session_state.projects[st.session_state.current_project]
-            st.markdown("### 📈 プロジェクト情報")
-            if current_project_data['type'] == 'dev':
-                st.info("🏗️ **推奨ツール**: 開発室、プロジェクト管理室、A/Bテスト")
-            elif current_project_data['type'] == 'marketing':
-                st.info("🎨 **推奨ツール**: AI Creative Studio、価格戦略、マルチプラットフォーム管理")
-            elif current_project_data['type'] == 'analysis':
-                st.info("📊 **推奨ツール**: パフォーマンスダッシュボード、アトリビューション分析")
-            st.metric("プロジェクト進捗", "65%", "+15%")
-            st.metric("今週のタスク", "8", "+3")
-        else:
-            st.markdown("### 📊 今週の統計")
-            st.metric("完了タスク", "42", "+12")
-            st.metric("生成コンテンツ", "156", "+34")
-            st.metric("投稿数", "28", "+7")
+            <p style="color: #94a3b8; margin: 0; font-size: 0.9rem;">📊 ステータス: <span style="color: {color};">{project['status']}</span></p>
+            <div style="margin-top: 0.75rem; height: 2px; background: linear-gradient(90deg, {color}40 0%, transparent 100%);"></div>
+        </div>
+        """, unsafe_allow_html=True)
 
-# メインコンテンツdivを閉じる
-try:
-    from components.header import close_main_content
-    close_main_content()
-except ImportError:
-    st.markdown('</div>', unsafe_allow_html=True)
+# ツールへのクイックアクセス
+st.markdown("## 🚀 クイックアクセス")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.markdown("### 🏗️ 新規開発")
+    if st.button("📋 開発室", use_container_width=True):
+        st.switch_page("pages/_development_room.py")
+    if st.button("📊 プロジェクト管理", use_container_width=True):
+        st.switch_page("pages/_project_management.py")
+    if st.button("🔄 A/Bテスト", use_container_width=True):
+        st.switch_page("pages/_ab_testing.py")
+
+with col2:
+    st.markdown("### 📊 運営・分析")
+    if st.button("📈 パフォーマンス", use_container_width=True):
+        st.switch_page("pages/_performance_dashboard.py")
+    if st.button("🔍 アトリビューション", use_container_width=True):
+        st.switch_page("pages/_attribution_analysis.py")
+    if st.button("💬 チャット", use_container_width=True):
+        st.switch_page("pages/_realtime_chat.py")
+
+with col3:
+    st.markdown("### 🎨 広告・マーケ")
+    if st.button("🎨 AI Creative", use_container_width=True):
+        st.switch_page("pages/_ai_creative_studio.py")
+    if st.button("🎯 広告最適化", use_container_width=True):
+        st.switch_page("pages/_realtime_ad_optimizer.py")
+    if st.button("💰 価格戦略", use_container_width=True):
+        st.switch_page("pages/_pricing_strategy.py")

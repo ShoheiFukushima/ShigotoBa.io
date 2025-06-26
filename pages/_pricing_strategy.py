@@ -87,24 +87,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ヘッダー
-st.markdown("""
-<div class="pricing-header">
-    <h1 class="pricing-title">💰 価格戦略コンサルティング</h1>
-    <p class="pricing-subtitle">個人開発・SaaSのための価格設定戦略 完全ガイド</p>
-</div>
-""", unsafe_allow_html=True)
-
-# サイドバー
-try:
-    import sys
-    import os
-    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from components.sidebar import render_sidebar
-    render_sidebar()
-except ImportError:
-    pass
-
 # プロジェクトコンテキスト表示
 current_project = None
 if hasattr(st.session_state, 'current_project') and st.session_state.current_project:
