@@ -9,14 +9,27 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.styles import load_common_styles, render_page_header, render_metric_card, render_status_badge, render_progress_bar
+from utils.page_config import setup_page
+from utils.session_state import init_common_session_state
+from components.common_sidebar import render_sidebar, get_default_sidebar_config
 
-# ページ設定
-st.set_page_config(
-    page_title="開発室 - shigotoba.io",
-    page_icon="📋",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# ページ設定（共通設定を使用）
+setup_page("開発室 - shigotoba.io", "📋", layout="wide")
+
+# セッション状態の初期化
+init_common_session_state()
+
+# サイドバー設定
+sidebar_config = get_default_sidebar_config()
+sidebar_config['statistics'] = [
+    {'label': 'タスク', 'value': '15', 'delta': '+3'},
+    {'label': '完了', 'value': '8', 'delta': '+2'},
+    {'label': '進捗', 'value': '53%', 'delta': '+8%'},
+    {'label': '効率', 'value': '92%', 'delta': '+4%'}
+]
+
+# サイドバーを表示
+render_sidebar(sidebar_config)
 
 # 共通スタイル読み込み
 load_common_styles()

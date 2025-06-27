@@ -83,8 +83,20 @@ def render_project_selector(projects: Dict[str, Dict[str, Any]]) -> Optional[str
     """
     st.markdown("## 📁 プロジェクト")
     
+    # 現在のプロジェクトの初期値を設定
+    current_project = st.session_state.get('current_project', None)
+    default_index = 0
+    
     project_names = ["選択してください"] + [data['name'] for data in projects.values()]
-    selected = st.selectbox("現在の作業", project_names, label_visibility="collapsed")
+    project_ids = [None] + list(projects.keys())
+    
+    # 現在のプロジェクトがある場合、そのインデックスを見つける
+    if current_project and current_project in projects:
+        project_name = projects[current_project]['name']
+        if project_name in project_names:
+            default_index = project_names.index(project_name)
+    
+    selected = st.selectbox("現在の作業", project_names, index=default_index, label_visibility="collapsed")
     
     selected_project_id = None
     
@@ -114,6 +126,11 @@ def render_project_selector(projects: Dict[str, Dict[str, Any]]) -> Optional[str
                 </div>
                 """, unsafe_allow_html=True)
                 break
+    else:
+        # プロジェクト未選択時の初期設定ウィザード表示
+        from components.onboarding import render_project_setup_wizard
+        if st.button("🎯 プロジェクトを始める", use_container_width=True, type="primary"):
+            st.session_state.show_project_wizard = True
     
     return selected_project_id
 

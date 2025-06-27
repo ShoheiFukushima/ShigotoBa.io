@@ -16,6 +16,7 @@ import plotly.express as px
 from typing import Dict, List, Any, Optional
 import uuid
 import time
+import asyncio
 
 # ページ設定
 st.set_page_config(
@@ -431,8 +432,8 @@ def generate_realtime_data():
         }
     }
 
-def generate_optimization_recommendations(data: Dict) -> List[Dict]:
-    """最適化推奨事項を生成"""
+def generate_optimization_recommendations_mock(data: Dict) -> List[Dict]:
+    """最適化推奨事項を生成（モック版）"""
     recommendations = []
     metrics = data['metrics']
     
@@ -486,6 +487,169 @@ def generate_optimization_recommendations(data: Dict) -> List[Dict]:
             'confidence': 0.83,
             'action': f"高パフォーマンスプラットフォームに予算をシフト"
         })
+    
+    return recommendations
+
+async def generate_optimization_recommendations(data: Dict) -> List[Dict]:
+    """最適化推奨事項を生成（実AI版）"""
+    # 環境変数でモック/実AIを切り替え
+    USE_MOCK = os.getenv('USE_MOCK_AI', 'false').lower() == 'true'
+    
+    if USE_MOCK:
+        return generate_optimization_recommendations_mock(data)
+    
+    try:
+        # AIクライアントのインポート
+        from config.ai_client import ai_client
+        from config.ai_models import TaskType
+        
+        # システムプロンプト
+        system_prompt = """あなたは広告運用のエキスパートAIです。
+パフォーマンスデータを分析し、実行可能で具体的な最適化提案を行ってください。
+
+重要な視点:
+1. ROIを最大化する
+2. 無駄な広告費を削減する
+3. データに基づいた客観的な判断
+4. 実行可能で具体的なアクション"""
+
+        # プロンプト作成
+        user_prompt = f"""
+以下の広告キャンペーンデータを分析し、最適化提案を生成してください：
+
+メトリクス:
+- CTR: {data['metrics']['ctr']:.2f}%
+- CPA: ¥{data['metrics']['cpa']:,.0f}
+- ROAS: {data['metrics']['roas']:.1f}x
+- コンバージョン率: {data['metrics']['conversion_rate']:.2f}%
+- インプレッション: {data['metrics']['impressions']:,}
+- 予算使用率: {data['metrics']['budget_utilization']*100:.1f}%
+
+プラットフォーム別パフォーマンス:
+{format_platform_data(data['platforms'])}
+
+過去のトレンド:
+{format_trend_data(data['trends'])}
+
+以下の形式で最適化提案を生成してください（JSON配列）:
+[
+  {{
+    "type": "optimization_type",
+    "priority": "high/medium/low",
+    "title": "提案タイトル",
+    "description": "具体的な説明",
+    "expected_impact": "期待される効果",
+    "confidence": 0.0-1.0,
+    "action": "具体的なアクション"
+  }}
+]
+"""
+
+        # AI分析実行
+        response = await ai_client.generate_content(
+            prompt=user_prompt,
+            task_type=TaskType.ANALYSIS,
+            system_prompt=system_prompt,
+            temperature=0.3,  # 分析は低温度で安定した結果を
+            max_tokens=1500
+        )
+        
+        # レスポンスをパース
+        recommendations = json.loads(response)
+        
+        # 追加の分析：異常検知
+        anomalies = await detect_anomalies(data)
+        if anomalies:
+            for anomaly in anomalies:
+                recommendations.append({
+                    'type': 'anomaly_detection',
+                    'priority': 'high',
+                    'title': f'異常検知: {anomaly["metric"]}',
+                    'description': anomaly['description'],
+                    'expected_impact': '即時対応により損失を防止',
+                    'confidence': anomaly['confidence'],
+                    'action': anomaly['recommended_action']
+                })
+        
+        # スコアリングと優先順位付け
+        recommendations = prioritize_recommendations(recommendations, data)
+        
+        return recommendations[:10]  # トップ10の提案を返す
+        
+    except Exception as e:
+        st.error(f"AI分析エラー: {str(e)}")
+        # エラー時はモック版にフォールバック
+        return generate_optimization_recommendations_mock(data)
+
+def format_platform_data(platforms: Dict) -> str:
+    """プラットフォームデータを整形"""
+    lines = []
+    for platform, data in platforms.items():
+        lines.append(f"- {platform}: パフォーマンス {data['performance']:.2f}, "
+                    f"予算 ¥{data['budget']:,}, 使用率 {data['spend_rate']*100:.1f}%")
+    return "\n".join(lines)
+
+def format_trend_data(trends: Dict) -> str:
+    """トレンドデータを整形"""
+    return f"""- 週次成長率: {trends['weekly_growth']*100:.1f}%
+- 季節性: {trends['seasonality']}
+- 需要レベル: {trends['demand_level']}"""
+
+async def detect_anomalies(data: Dict) -> List[Dict]:
+    """異常検知を実行"""
+    anomalies = []
+    
+    # 簡易的な異常検知ロジック
+    # TODO: より高度な統計的手法やMLモデルを実装
+    
+    # CTRの急激な低下
+    if data['metrics']['ctr'] < 1.0:
+        anomalies.append({
+            'metric': 'CTR',
+            'description': 'CTRが異常に低い値を示しています',
+            'confidence': 0.95,
+            'recommended_action': 'クリエイティブの即時見直しと配信停止を検討'
+        })
+    
+    # 予算の急速な消化
+    if data['metrics']['budget_utilization'] > 0.9 and data['metrics']['hours_remaining'] > 12:
+        anomalies.append({
+            'metric': '予算消化率',
+            'description': '予算が予定より早く消化されています',
+            'confidence': 0.88,
+            'recommended_action': '入札価格の調整または日次予算の見直し'
+        })
+    
+    return anomalies
+
+def prioritize_recommendations(recommendations: List[Dict], data: Dict) -> List[Dict]:
+    """推奨事項の優先順位付け"""
+    # スコアリングロジック
+    for rec in recommendations:
+        score = 0
+        
+        # 優先度によるスコア
+        priority_scores = {'high': 3, 'medium': 2, 'low': 1}
+        score += priority_scores.get(rec['priority'], 1)
+        
+        # 信頼度によるスコア
+        score += rec['confidence'] * 2
+        
+        # 期待インパクトによるスコア（数値を抽出して評価）
+        import re
+        impact_match = re.search(r'(\d+)%', rec['expected_impact'])
+        if impact_match:
+            impact_value = int(impact_match.group(1))
+            score += impact_value / 20  # 20%で1ポイント
+        
+        rec['_score'] = score
+    
+    # スコアでソート
+    recommendations.sort(key=lambda x: x['_score'], reverse=True)
+    
+    # スコアフィールドを削除
+    for rec in recommendations:
+        rec.pop('_score', None)
     
     return recommendations
 
@@ -863,7 +1027,10 @@ with tabs[2]:
     recommendations = generate_optimization_recommendations(st.session_state.realtime_data)
     
     if recommendations:
-        st.markdown(f"#### {len(recommendations)}件の最適化機会を検出")
+        # 非同期関数の呼び出しを修正
+    if asyncio.iscoroutine(recommendations):
+        recommendations = asyncio.run(recommendations)
+    st.markdown(f"#### {len(recommendations)}件の最適化機会を検出")
         
         for i, rec in enumerate(recommendations):
             priority_color = {

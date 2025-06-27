@@ -299,8 +299,8 @@ def generate_creative_id():
     """クリエイティブIDを生成"""
     return f"creative_{datetime.now().strftime('%Y%m%d%H%M%S')}_{str(uuid.uuid4())[:8]}"
 
-def generate_ai_creative_content(creative_type: str, target_audience: str, brand_info: Dict) -> Dict[str, Any]:
-    """AI駆動のクリエイティブコンテンツ生成（スタブ）"""
+def generate_ai_creative_content_mock(creative_type: str, target_audience: str, brand_info: Dict) -> Dict[str, Any]:
+    """AI駆動のクリエイティブコンテンツ生成（モック版）"""
     templates = {
         "ad_copy": {
             "headline": f"革新的な{brand_info.get('category', '製品')}で{target_audience}の生活を変革",
@@ -344,6 +344,125 @@ def generate_ai_creative_content(creative_type: str, target_audience: str, brand
             "トレンドキーワードの活用を検討"
         ]
     }
+
+async def generate_ai_creative_content(creative_type: str, target_audience: str, brand_info: Dict) -> Dict[str, Any]:
+    """AI駆動のクリエイティブコンテンツ生成（実AI版）"""
+    # 環境変数でモック/実AIを切り替え
+    USE_MOCK = os.getenv('USE_MOCK_AI', 'false').lower() == 'true'
+    
+    if USE_MOCK:
+        return generate_ai_creative_content_mock(creative_type, target_audience, brand_info)
+    
+    try:
+        # AIクライアントのインポート
+        from config.ai_client import ai_client
+        from config.ai_models import TaskType
+        
+        # プロンプト作成
+        system_prompt = """あなたはプロのマーケティングクリエイターです。
+ブランドの価値を最大限に引き出し、ターゲット層に響く魅力的なコンテンツを作成してください。
+
+重要な要素:
+1. ターゲット層の感情に訴える
+2. ブランドの独自性を強調
+3. 明確な行動喚起（CTA）
+4. プラットフォームに最適化した形式"""
+
+        user_prompt = f"""
+以下の条件でクリエイティブコンテンツを生成してください：
+
+コンテンツタイプ: {creative_type}
+ターゲット層: {target_audience}
+ブランド情報:
+- 名称: {brand_info.get('name', 'ブランド')}
+- カテゴリ: {brand_info.get('category', '製品・サービス')}
+- 価値提案: {brand_info.get('value_prop', '独自の価値')}
+- トーン: {brand_info.get('tone', 'プロフェッショナル')}
+
+生成する内容:
+{get_content_requirements(creative_type)}
+
+JSON形式で出力してください。
+"""
+
+        # AI生成
+        response = await ai_client.generate_content(
+            prompt=user_prompt,
+            task_type=TaskType.GENERATION,
+            system_prompt=system_prompt,
+            temperature=0.8,
+            max_tokens=1000
+        )
+        
+        # レスポンスをパース
+        content = json.loads(response)
+        
+        # パフォーマンス予測（別のAI呼び出し）
+        performance = await predict_creative_performance(content, target_audience)
+        
+        return {
+            "content": content,
+            "generated_at": datetime.now().isoformat(),
+            "performance_prediction": performance,
+            "optimization_suggestions": await get_optimization_suggestions(content, target_audience)
+        }
+        
+    except Exception as e:
+        st.error(f"AI生成エラー: {str(e)}")
+        # エラー時はモック版にフォールバック
+        return generate_ai_creative_content_mock(creative_type, target_audience, brand_info)
+
+def get_content_requirements(creative_type: str) -> str:
+    """コンテンツタイプ別の要件を返す"""
+    requirements = {
+        "ad_copy": """
+- headline: 魅力的な見出し（15-30文字）
+- subheadline: サブ見出し（30-50文字）
+- body: 本文（100-200文字）
+- cta: 行動喚起ボタンテキスト
+""",
+        "social_post": """
+- twitter: Twitter用投稿（280文字以内、ハッシュタグ含む）
+- instagram: Instagram用投稿（キャプション、絵文字活用）
+- linkedin: LinkedIn用投稿（プロフェッショナルトーン）
+- facebook: Facebook用投稿（エンゲージメント重視）
+""",
+        "video_script": """
+- hook: 最初の3秒で視聴者を引きつけるフック
+- problem: 視聴者の課題・痛み
+- solution: ブランドが提供する解決策
+- cta: 締めの行動喚起
+""",
+        "email_campaign": """
+- subject: 件名（開封率を高める）
+- preview: プレビューテキスト
+- header: 挨拶・導入
+- body: 本文（価値提案中心）
+- cta: 明確な行動喚起
+"""
+    }
+    return requirements.get(creative_type, "適切なコンテンツを生成してください")
+
+async def predict_creative_performance(content: Dict, target_audience: str) -> Dict[str, float]:
+    """クリエイティブのパフォーマンスを予測"""
+    # TODO: 実際のパフォーマンス予測ロジックを実装
+    # 現在は簡易版
+    return {
+        "ctr_estimate": np.random.uniform(2.0, 7.0),
+        "engagement_score": np.random.uniform(70, 90),
+        "conversion_probability": np.random.uniform(1.5, 3.5),
+        "virality_potential": np.random.uniform(20, 70)
+    }
+
+async def get_optimization_suggestions(content: Dict, target_audience: str) -> List[str]:
+    """最適化提案を生成"""
+    # TODO: AIベースの最適化提案を実装
+    return [
+        f"{target_audience}により響くキーワードの使用を検討",
+        "感情的なトリガーワードを追加",
+        "社会的証明（実績・レビュー）の要素を強化",
+        "緊急性・限定性を演出する要素を追加"
+    ]
 
 def calculate_creative_score(creative_data: Dict) -> float:
     """クリエイティブの総合スコアを計算"""

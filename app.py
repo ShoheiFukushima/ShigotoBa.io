@@ -11,6 +11,9 @@ from utils.navigation import create_nav_buttons, get_nav_preset
 from components.common_sidebar import render_sidebar, get_default_sidebar_config
 from components.project_card import render_project_grid
 from components.metrics import render_metrics_row
+from components.onboarding import render_onboarding_modal, render_quick_start_guide, render_help_button
+from components.favorites import render_favorites_section, render_recent_tools
+from components.search import render_search_box, search_tools, render_search_results
 
 # ページ設定（共通設定を使用）
 setup_page("shigotoba.io - マーケティング自動化", "🚀", layout="wide")
@@ -30,8 +33,22 @@ sidebar_config['statistics'] = [
 # サイドバーを表示
 render_sidebar(sidebar_config)
 
-# メインコンテンツ
-st.title("🏠 ダッシュボード")
+# オンボーディングモーダル表示
+render_onboarding_modal()
+
+# ヘルプボタン表示
+render_help_button()
+
+# プロジェクト未選択時のウィザード表示
+if st.session_state.get('show_project_wizard', False):
+    from components.onboarding import render_project_setup_wizard
+    render_project_setup_wizard()
+else:
+    # メインコンテンツ
+    st.title("🏠 ダッシュボード")
+    
+    # 初心者向けクイックスタートガイド
+    render_quick_start_guide()
 
 # メトリクス表示
 st.markdown("## 📊 今日の概要")
@@ -42,6 +59,25 @@ metrics_data = [
     {'label': '効率スコア', 'value': '89%', 'delta': '+5%', 'delta_color': 'normal'}
 ]
 render_metrics_row(metrics_data)
+
+st.markdown("---")
+
+# 検索機能とお気に入り
+col1, col2 = st.columns([2, 1])
+
+with col1:
+    # ツール検索
+    search_query = render_search_box()
+    if search_query:
+        results = search_tools(search_query)
+        render_search_results(results, search_query)
+
+with col2:
+    # お気に入りセクション
+    render_favorites_section()
+
+# 最近使ったツール
+render_recent_tools()
 
 st.markdown("---")
 
@@ -66,3 +102,11 @@ create_nav_buttons(get_nav_preset('analytics'), columns=4)
 st.markdown("### 🎨 広告・マーケティング実行")
 marketing_nav_items = get_nav_preset('marketing') + get_nav_preset('utilities')
 create_nav_buttons(marketing_nav_items, columns=5)
+
+# 新セクション: パイプライン
+st.markdown("### 🔄 自動化パイプライン")
+pipeline_items = [
+    {'icon': '🔄', 'title': 'ワークフロー管理', 'page': 'pages/_workflow_manager.py', 'key': 'workflow'},
+    {'icon': '📊', 'title': 'パイプラインモニター', 'page': 'pages/_pipeline_monitor.py', 'key': 'monitor'},
+]
+create_nav_buttons(pipeline_items, columns=4)
