@@ -88,7 +88,6 @@ with tab1:
             </div>
         </div>
         """, unsafe_allow_html=True)
-            st.markdown(f"**{task['name']}**")
         with col2:
             color = {"高": "🔴", "中": "🟡", "低": "🟢"}[task['priority']]
             st.markdown(f"{color} {task['priority']}")
