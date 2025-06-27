@@ -88,13 +88,6 @@ with tab1:
             </div>
         </div>
         """, unsafe_allow_html=True)
-        with col2:
-            color = {"高": "🔴", "中": "🟡", "低": "🟢"}[task['priority']]
-            st.markdown(f"{color} {task['priority']}")
-        with col3:
-            st.markdown(task['status'])
-        with col4:
-            st.progress(task['progress'] / 100)
 
 with tab2:
     st.markdown("### プロジェクト進捗")
