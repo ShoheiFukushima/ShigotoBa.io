@@ -27,6 +27,17 @@ st.markdown("""
         background-color: #0e1117;
     }
     
+    /* サイドバーのz-index調整 */
+    section[data-testid="stSidebar"] {
+        z-index: 10;
+    }
+    
+    /* メインコンテンツのz-index調整 */
+    .main .block-container {
+        z-index: 1;
+        position: relative;
+    }
+    
     /* ウィジェットカード */
     .widget-card {
         background: linear-gradient(135deg, #1e293b 0%, #334155 100%);

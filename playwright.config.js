@@ -61,7 +61,7 @@ module.exports = defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'python3 -m streamlit run app.py --server.port 8501 --server.headless true',
+    command: 'python3 -m streamlit run dashboard/home.py --server.port 8501 --server.headless true',
     url: 'http://localhost:8501',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,

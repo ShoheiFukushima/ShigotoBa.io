@@ -144,7 +144,7 @@ st.markdown("""
         border-radius: 10px;
         border: 1px solid rgba(16, 185, 129, 0.3);
         font-size: 0.8rem;
-        z-index: 1000;
+        z-index: 30;
     }
     
     .cost-value {

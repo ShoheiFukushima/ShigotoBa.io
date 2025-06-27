@@ -101,7 +101,7 @@ st.markdown("""
         padding: 10px 20px;
         border-radius: 30px;
         border: 1px solid #3b82f6;
-        z-index: 1000;
+        z-index: 30;
     }
     
     .mode-auto {
