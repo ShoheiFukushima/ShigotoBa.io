@@ -11,12 +11,7 @@
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
     "test:ui": "playwright test --ui",
-    "test:report": "playwright show-report",
-    "test:basic": "playwright test tests/dashboard-basic.spec.js",
-    "test:projects": "playwright test tests/project-management.spec.js",
-    "test:flow": "playwright test tests/flow-navigation.spec.js",
-    "test:visual": "playwright test tests/visual-regression.spec.js",
-    "test:e2e": "playwright test tests/dashboard-e2e.spec.js"
+    "test:report": "playwright show-report"
   },
   "keywords": [],
   "author": "",
