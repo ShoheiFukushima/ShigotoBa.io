@@ -17,8 +17,115 @@ from typing import Dict, List, Any, Optional
 import uuid
 from scipy import stats
 import networkx as nx
+import asyncio
 
-# ページ設定
+# AI機能
+async def analyze_attribution_with_ai(
+    attribution_data: Dict,
+    campaign_data: Dict,
+    conversion_data: Dict
+) -> Dict[str, Any]:
+    """AI駆動のアトリビューション分析"""
+    try:
+        from config.ai_client import ai_client
+        from config.ai_models import TaskType
+        
+        analysis_prompt = f"""
+        マルチタッチアトリビューション分析を実行してください：
+
+        アトリビューションデータ:
+        - 総コンバージョン数: {attribution_data.get('total_conversions', 0)}
+        - アトリビューションモデル: {attribution_data.get('model_type', 'last_click')}
+        - 分析期間: {attribution_data.get('analysis_period', 30)}日間
+        - タッチポイント数: {attribution_data.get('touchpoints', 0)}
+
+        キャンペーンデータ:
+        - アクティブキャンペーン数: {campaign_data.get('active_campaigns', 0)}
+        - 総予算: {campaign_data.get('total_budget', 0)}円
+        - 主要チャネル: {campaign_data.get('channels', [])}
+        - 平均CPC: {campaign_data.get('avg_cpc', 0)}円
+
+        コンバージョンデータ:
+        - コンバージョン率: {conversion_data.get('conversion_rate', 0)*100:.2f}%
+        - 平均コンバージョン価値: {conversion_data.get('avg_value', 0)}円
+        - ROI: {conversion_data.get('roi', 1.0):.2f}
+
+        以下の形式でJSON回答してください：
+        {{
+            "attribution_insights": {{
+                "primary_attribution_model": "推奨モデル（first_click/last_click/linear/time_decay/position_based）",
+                "model_performance_scores": {{
+                    "first_click": 0.75,
+                    "last_click": 0.85,
+                    "linear": 0.80,
+                    "time_decay": 0.90,
+                    "position_based": 0.88
+                }},
+                "attribution_accuracy": 0.92,
+                "key_findings": ["発見1", "発見2", "発見3"]
+            }},
+            "channel_attribution": {{
+                "channel_contributions": [
+                    {{"channel": "Google Ads", "attribution_weight": 0.35, "roi": 3.2}},
+                    {{"channel": "Facebook", "attribution_weight": 0.25, "roi": 2.8}},
+                    {{"channel": "Email", "attribution_weight": 0.20, "roi": 4.1}}
+                ],
+                "undervalued_channels": ["特定されたチャネル"],
+                "overvalued_channels": ["特定されたチャネル"]
+            }},
+            "journey_analysis": {{
+                "optimal_journey_length": 4,
+                "key_conversion_paths": [
+                    {{"path": ["Google Ads", "Website", "Email", "Purchase"], "frequency": 150, "conversion_rate": 0.12}},
+                    {{"path": ["Facebook", "Website", "Purchase"], "frequency": 200, "conversion_rate": 0.08}}
+                ],
+                "drop_off_points": ["特定されたドロップオフポイント"]
+            }},
+            "optimization_recommendations": {{
+                "budget_reallocation": [
+                    {{"from_channel": "Facebook", "to_channel": "Email", "amount": 100000, "expected_roi_improvement": 15.2}}
+                ],
+                "touchpoint_optimization": [
+                    "最適化提案1",
+                    "最適化提案2"
+                ],
+                "attribution_model_switch": {{
+                    "recommended_model": "time_decay",
+                    "expected_accuracy_improvement": 8.5,
+                    "implementation_complexity": "medium"
+                }}
+            }},
+            "predictive_insights": {{
+                "future_performance_forecast": {{
+                    "next_30_days_conversions": 450,
+                    "expected_roi": 3.8,
+                    "confidence_interval": [3.2, 4.4]
+                }},
+                "seasonal_patterns": ["検出されたパターン"],
+                "anomaly_detection": ["異常値や注意点"]
+            }},
+            "confidence_score": 0.87
+        }}
+        """
+        
+        response = await ai_client.generate_content(
+            prompt=analysis_prompt,
+            task_type=TaskType.DATA_ANALYSIS
+        )
+        
+        result = json.loads(response.content)
+        result['ai_generated'] = True
+        result['timestamp'] = datetime.now().isoformat()
+        return result
+            
+    except Exception as e:
+        st.error(f"AI分析エラー: {e}")
+        return {
+            "error": str(e),
+            "ai_generated": False,
+            "timestamp": datetime.now().isoformat()
+        }
+
 st.set_page_config(
     page_title="アトリビューション分析",
     page_icon="🎯",
@@ -1769,6 +1876,227 @@ with st.sidebar:
     
     st.markdown("---")
     
+    # AI分析セクション
+    st.subheader("🤖 AI高度分析")
+    
+    # AI分析実行ボタン
+    if st.button("🔍 AI アトリビューション分析を実行", key="ai_attribution_analysis"):
+        # 分析用データを整理
+        attribution_data = {
+            'total_conversions': len([j for j in customer_journeys if j['converted']]),
+            'model_type': selected_model,
+            'analysis_period': 30,
+            'touchpoints': len(all_touchpoints)
+        }
+        
+        campaign_data = {
+            'active_campaigns': 12,  # サンプル値
+            'total_budget': 5000000,  # サンプル値
+            'channels': list(all_touchpoints),
+            'avg_cpc': 150  # サンプル値
+        }
+        
+        conversion_data = {
+            'conversion_rate': len([j for j in customer_journeys if j['converted']]) / len(customer_journeys),
+            'avg_value': np.mean([j['conversion_value'] for j in customer_journeys if j['converted']]),
+            'roi': 2.5  # サンプル値
+        }
+        
+        with st.spinner("AI分析を実行中..."):
+            try:
+                # 非同期関数を同期実行
+                loop = None
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                
+                if loop.is_running():
+                    import concurrent.futures
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        future = executor.submit(
+                            asyncio.run,
+                            analyze_attribution_with_ai(attribution_data, campaign_data, conversion_data)
+                        )
+                        ai_analysis = future.result(timeout=15)
+                else:
+                    ai_analysis = loop.run_until_complete(
+                        analyze_attribution_with_ai(attribution_data, campaign_data, conversion_data)
+                    )
+                
+                # AI分析結果を表示
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown("#### 🎯 モデル推奨事項")
+                    insights = ai_analysis.get('attribution_insights', {})
+                    
+                    st.markdown(f"""
+                    <div class="insight-card">
+                        <div class="insight-title">推奨アトリビューションモデル</div>
+                        <div style="font-size: 1.5rem; color: #8b5cf6; font-weight: bold; margin: 10px 0;">
+                            {insights.get('primary_attribution_model', 'N/A').replace('_', ' ').title()}
+                        </div>
+                        <div style="color: #94a3b8;">
+                            予測精度: {insights.get('attribution_accuracy', 0)*100:.1f}%
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # 主要発見事項
+                    st.markdown("##### 💡 主要発見事項")
+                    key_findings = insights.get('key_findings', [])
+                    for finding in key_findings:
+                        st.markdown(f"• {finding}")
+                
+                with col2:
+                    st.markdown("#### 📊 チャネル分析")
+                    channel_data = ai_analysis.get('channel_attribution', {})
+                    
+                    # チャネル貢献度
+                    contributions = channel_data.get('channel_contributions', [])
+                    if contributions:
+                        for contrib in contributions[:5]:  # トップ5を表示
+                            weight = contrib.get('attribution_weight', 0)
+                            roi = contrib.get('roi', 0)
+                            
+                            st.markdown(f"""
+                            <div style="margin: 10px 0; padding: 10px; background: rgba(139, 92, 246, 0.1); border-radius: 8px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <strong>{contrib.get('channel', 'N/A')}</strong>
+                                    <span style="color: #8b5cf6; font-weight: bold;">{weight*100:.1f}%</span>
+                                </div>
+                                <div style="color: #94a3b8; font-size: 0.9rem;">
+                                    ROI: {roi:.1f}x
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                    
+                    # 過小/過大評価チャネル
+                    undervalued = channel_data.get('undervalued_channels', [])
+                    overvalued = channel_data.get('overvalued_channels', [])
+                    
+                    if undervalued:
+                        st.markdown("**📈 過小評価チャネル:**")
+                        for channel in undervalued:
+                            st.markdown(f"• {channel}")
+                    
+                    if overvalued:
+                        st.markdown("**📉 過大評価チャネル:**")
+                        for channel in overvalued:
+                            st.markdown(f"• {channel}")
+                
+                # ジャーニー分析結果
+                st.markdown("#### 🛤️ ジャーニー最適化")
+                journey_analysis = ai_analysis.get('journey_analysis', {})
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    optimal_length = journey_analysis.get('optimal_journey_length', 4)
+                    st.metric("最適ジャーニー長", f"{optimal_length}ステップ")
+                
+                with col2:
+                    key_paths = journey_analysis.get('key_conversion_paths', [])
+                    st.metric("主要コンバージョンパス", f"{len(key_paths)}種類")
+                
+                with col3:
+                    drop_points = journey_analysis.get('drop_off_points', [])
+                    st.metric("ドロップオフポイント", f"{len(drop_points)}箇所")
+                
+                # 最適化推奨事項
+                st.markdown("#### ✨ AI最適化推奨")
+                recommendations = ai_analysis.get('optimization_recommendations', {})
+                
+                # 予算再配分提案
+                budget_recs = recommendations.get('budget_reallocation', [])
+                if budget_recs:
+                    st.markdown("##### 💰 予算再配分提案")
+                    for rec in budget_recs:
+                        st.markdown(f"""
+                        <div class="insight-card" style="border-left: 4px solid #10b981;">
+                            <div style="font-weight: bold;">
+                                {rec.get('from_channel')} → {rec.get('to_channel')}
+                            </div>
+                            <div style="color: #94a3b8;">
+                                金額: ¥{rec.get('amount', 0):,}<br>
+                                期待ROI改善: +{rec.get('expected_roi_improvement', 0):.1f}%
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                # タッチポイント最適化
+                touchpoint_opts = recommendations.get('touchpoint_optimization', [])
+                if touchpoint_opts:
+                    st.markdown("##### 🎯 タッチポイント最適化")
+                    for opt in touchpoint_opts:
+                        st.markdown(f"• {opt}")
+                
+                # 予測インサイト
+                st.markdown("#### 🔮 予測インサイト")
+                predictions = ai_analysis.get('predictive_insights', {})
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    forecast = predictions.get('future_performance_forecast', {})
+                    
+                    next_conversions = forecast.get('next_30_days_conversions', 0)
+                    expected_roi = forecast.get('expected_roi', 0)
+                    
+                    st.markdown(f"""
+                    <div class="insight-card">
+                        <div class="insight-title">30日間予測</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
+                            <div>
+                                <div style="font-size: 1.5rem; color: #8b5cf6; font-weight: bold;">{next_conversions}</div>
+                                <div style="color: #94a3b8; font-size: 0.9rem;">コンバージョン</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 1.5rem; color: #10b981; font-weight: bold;">{expected_roi:.1f}x</div>
+                                <div style="color: #94a3b8; font-size: 0.9rem;">予測ROI</div>
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with col2:
+                    # 異常検知
+                    anomalies = predictions.get('anomaly_detection', [])
+                    if anomalies:
+                        st.markdown("**⚠️ 異常検知:**")
+                        for anomaly in anomalies:
+                            st.markdown(f"• {anomaly}")
+                    
+                    # 季節パターン
+                    patterns = predictions.get('seasonal_patterns', [])
+                    if patterns:
+                        st.markdown("**📈 季節パターン:**")
+                        for pattern in patterns:
+                            st.markdown(f"• {pattern}")
+                
+                # 信頼度スコア
+                confidence = ai_analysis.get('confidence_score', 0.75)
+                ai_generated = ai_analysis.get('ai_generated', False)
+                
+                st.markdown(f"""
+                <div style="text-align: center; margin: 20px 0; padding: 15px; background: rgba(139, 92, 246, 0.1); border-radius: 8px;">
+                    <div style="color: #8b5cf6;">
+                        {'🤖' if ai_generated else '📊'} 
+                        {'AI分析' if ai_generated else 'ルールベース分析'} | 
+                        信頼度: {confidence*100:.1f}%
+                    </div>
+                    <div style="color: #64748b; font-size: 0.8rem;">
+                        分析時刻: {ai_analysis.get('timestamp', datetime.now().isoformat())[:19]}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+            except Exception as e:
+                st.error(f"AI分析でエラーが発生しました: {str(e)}")
+                st.info("基本的なアトリビューション分析結果をご確認ください。")
+    
+    st.markdown("---")
+    
     # エクスポート
     st.subheader("📥 エクスポート")
     
@@ -1807,3 +2135,4 @@ with st.sidebar:
 # フッター
 st.markdown("---")
 st.caption("🎯 Attribution Analysis: 最先端のマルチタッチアトリビューション分析で、真のROIを解明し、マーケティング投資を最適化します。")
+# ページ設定

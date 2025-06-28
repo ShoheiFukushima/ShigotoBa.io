@@ -95,11 +95,11 @@ AI_MODELS = {
 # 用途別推奨模型配置（福島さんの推奨設定）
 TASK_MODEL_MAPPING = {
     TaskType.SUMMARIZATION: "gemini-1.5-flash",      # 低コスト・高速
-    TaskType.CONTENT_CREATION: "gpt-4",              # 高品質創作
+    TaskType.CONTENT_CREATION: "gemini-1.5-pro",     # 高品質創作（Gemini使用）
     TaskType.MARKET_ANALYSIS: "gemini-1.5-pro",      # バランス型・最新情報
-    TaskType.CHAT: "gpt-3.5-turbo",                  # リアルタイム・安定性
-    TaskType.DATA_ANALYSIS: "claude-3-opus",         # 長文・詳細分析
-    TaskType.TRANSLATION: "claude-3-haiku"           # 低コスト・高精度
+    TaskType.CHAT: "gemini-1.5-flash",               # リアルタイム・安定性（Gemini使用）
+    TaskType.DATA_ANALYSIS: "gemini-1.5-pro",        # 長文・詳細分析（Gemini使用）
+    TaskType.TRANSLATION: "gemini-1.5-flash"         # 低コスト・高精度（Gemini使用）
 }
 
 class AIModelManager:
@@ -146,10 +146,10 @@ class AIModelManager:
         """コスト最適化設定"""
         cost_optimized = {
             TaskType.SUMMARIZATION: "gemini-1.5-flash",
-            TaskType.CONTENT_CREATION: "claude-3-haiku",  # 品質下げてコスト重視
+            TaskType.CONTENT_CREATION: "gemini-1.5-flash",  # 品質下げてコスト重視
             TaskType.MARKET_ANALYSIS: "gemini-1.5-flash",
-            TaskType.CHAT: "gpt-3.5-turbo",
-            TaskType.DATA_ANALYSIS: "claude-3-haiku",
+            TaskType.CHAT: "gemini-1.5-flash",
+            TaskType.DATA_ANALYSIS: "gemini-1.5-flash",
             TaskType.TRANSLATION: "gemini-1.5-flash"
         }
         self.current_config.update(cost_optimized)
@@ -157,12 +157,12 @@ class AIModelManager:
     def optimize_for_quality(self):
         """品質最適化設定"""
         quality_optimized = {
-            TaskType.SUMMARIZATION: "claude-3-opus",
-            TaskType.CONTENT_CREATION: "gpt-4",
-            TaskType.MARKET_ANALYSIS: "claude-3-opus",
-            TaskType.CHAT: "gpt-4",
-            TaskType.DATA_ANALYSIS: "claude-3-opus",
-            TaskType.TRANSLATION: "gpt-4"
+            TaskType.SUMMARIZATION: "gemini-1.5-pro",
+            TaskType.CONTENT_CREATION: "gemini-1.5-pro",
+            TaskType.MARKET_ANALYSIS: "gemini-1.5-pro",
+            TaskType.CHAT: "gemini-1.5-pro",
+            TaskType.DATA_ANALYSIS: "gemini-1.5-pro",
+            TaskType.TRANSLATION: "gemini-1.5-pro"
         }
         self.current_config.update(quality_optimized)
     

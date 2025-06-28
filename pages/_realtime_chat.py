@@ -368,18 +368,20 @@ if not st.session_state.chat_history:
 for message in st.session_state.chat_history:
     render_message(message)
 
-# タイピングインジケーター
-if st.session_state.is_typing:
-    st.markdown("""
-    <div class="typing-indicator">
-        AIが入力中
-        <div class="typing-dots">
-            <span></span>
-            <span></span>
-            <span></span>
+# タイピングインジケーター（AI応答生成後は自動的にfalseになる）
+if st.session_state.get('is_typing', False) and len(st.session_state.chat_history) > 0:
+    # 最後のメッセージがユーザーからの場合のみ表示
+    if st.session_state.chat_history[-1]["role"] == "user":
+        st.markdown("""
+        <div class="typing-indicator">
+            AIが入力中
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -394,9 +396,36 @@ for i, question in enumerate(PRESET_QUESTIONS):
     col_index = i % 4
     with preset_cols[col_index]:
         if st.button(question, key=f"preset_{i}", help="クリックで質問を送信"):
-            # プリセット質問を送信
+            # プリセット質問を送信して処理
             add_message("user", question)
             st.session_state.is_typing = True
+            
+            # AI応答を生成
+            try:
+                import concurrent.futures
+                
+                async def get_response():
+                    return await get_ai_response(question)
+                
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(asyncio.run, get_response())
+                    ai_response = future.result(timeout=30)
+                
+                # AI応答を追加
+                add_message("assistant", ai_response["content"], {
+                    "cost": ai_response["cost"],
+                    "model": ai_response["model"],
+                    "tokens": ai_response["tokens"]
+                })
+                
+                # コスト累計更新
+                st.session_state.total_chat_cost += ai_response["cost"]
+                st.session_state.is_typing = False
+                
+            except Exception as e:
+                add_message("system", f"エラー: AI応答の取得に失敗しました - {str(e)}")
+                st.session_state.is_typing = False
+            
             st.rerun()
 
 st.markdown("---")
@@ -408,7 +437,8 @@ with col1:
     user_input = st.text_input(
         "メッセージを入力してください...",
         key="chat_input",
-        placeholder="例：このプロダクトの競合分析をお願いします"
+        placeholder="例：このプロダクトの競合分析をお願いします",
+        autocomplete="off"
     )
 
 with col2:
@@ -443,8 +473,7 @@ if (send_button or user_input) and user_input.strip():
         st.session_state.total_chat_cost += ai_response["cost"]
         st.session_state.is_typing = False
         
-        # 入力をクリア
-        st.session_state.chat_input = ""
+        # 入力をクリア（session_stateを直接変更しない）
         st.rerun()
         
     except Exception as e:

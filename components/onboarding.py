@@ -208,7 +208,7 @@ def render_project_setup_wizard():
         st.markdown("---")
         st.markdown("### 新規プロジェクト作成")
         
-        project_name = st.text_input("プロジェクト名", placeholder="例: 新商品キャンペーン")
+        project_name = st.text_input("プロジェクト名", placeholder="例: 新商品キャンペーン", autocomplete="off")
         project_type = st.selectbox("プロジェクトタイプ", 
                                    ["開発系", "マーケティング系", "分析系"])
         project_desc = st.text_area("プロジェクトの説明", 

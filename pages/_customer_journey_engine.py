@@ -18,6 +18,257 @@ import uuid
 import networkx as nx
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
+import asyncio
+
+# AI機能のインポート
+async def analyze_customer_journey_with_ai(customer_data: Dict, journey_data: Dict) -> Dict[str, Any]:
+    """AI駆動の顧客ジャーニー分析"""
+    USE_MOCK_AI = os.getenv('USE_MOCK_AI', 'false').lower() == 'true'
+    
+    if USE_MOCK_AI:
+        return analyze_customer_journey_mock(customer_data, journey_data)
+    
+    try:
+        from config.ai_client import ai_client
+        from config.ai_models import TaskType
+        
+        # 顧客データとジャーニーデータを分析用に整理
+        analysis_prompt = f"""
+        顧客ジャーニーデータを分析してください：
+
+        顧客プロファイル:
+        - 顧客ID: {customer_data.get('id', 'unknown')}
+        - 現在ステージ: {customer_data.get('stage', 'unknown')}
+        - 購入回数: {customer_data.get('total_purchases', 0)}
+        - エンゲージメントスコア: {customer_data.get('engagement_score', 0):.2f}
+        - チャーンリスク: {customer_data.get('churn_probability', 0):.2f}
+        - LTV: {customer_data.get('ltv', 0)}
+
+        ジャーニーコンテキスト:
+        - 総顧客数: {journey_data.get('total_customers', 0)}
+        - アクティブステージ: {list(journey_data.get('journey_metrics', {}).keys())}
+
+        以下の形式でJSON回答してください：
+        {{
+            "next_actions": [
+                {{
+                    "action": "推奨アクション名",
+                    "probability": 0.8,
+                    "timing": "実行タイミング",
+                    "channel": "推奨チャネル",
+                    "reason": "選択理由"
+                }}
+            ],
+            "risk_assessment": {{
+                "churn_risk": 0.3,
+                "engagement_trend": "increasing",
+                "value_potential": "high"
+            }},
+            "optimization_suggestions": [
+                "最適化提案1",
+                "最適化提案2"
+            ],
+            "confidence_score": 0.85
+        }}
+        """
+        
+        response = await ai_client.chat_completion(
+            messages=[{"role": "user", "content": analysis_prompt}],
+            task_type=TaskType.DATA_ANALYSIS
+        )
+        
+        # JSONレスポンスをパース
+        import json
+        try:
+            result = json.loads(response['content'])
+            result['ai_generated'] = True
+            result['timestamp'] = datetime.now().isoformat()
+            return result
+        except json.JSONDecodeError:
+            # JSONパースに失敗した場合はモックデータにフォールバック
+            return analyze_customer_journey_mock(customer_data, journey_data)
+            
+    except Exception as e:
+        print(f"AI analysis error: {e}")
+        return analyze_customer_journey_mock(customer_data, journey_data)
+
+def analyze_customer_journey_mock(customer_data: Dict, journey_data: Dict) -> Dict[str, Any]:
+    """カスタマージャーニー分析のモック版"""
+    # 顧客の状態に基づいた基本的な分析
+    churn_prob = customer_data.get('churn_probability', 0.3)
+    engagement = customer_data.get('engagement_score', 0.5)
+    purchases = customer_data.get('total_purchases', 0)
+    
+    next_actions = []
+    
+    if churn_prob > 0.7:
+        next_actions.append({
+            "action": "緊急チャーン防止キャンペーン",
+            "probability": 0.8,
+            "timing": "24時間以内",
+            "channel": "Email + SMS + 電話",
+            "reason": "高いチャーンリスクを検出"
+        })
+    elif churn_prob > 0.4:
+        next_actions.append({
+            "action": "リテンション強化施策",
+            "probability": 0.6,
+            "timing": "1週間以内",
+            "channel": "Email + アプリ通知",
+            "reason": "中程度のチャーンリスク"
+        })
+    
+    if purchases == 0:
+        next_actions.append({
+            "action": "初回購入促進キャンペーン",
+            "probability": 0.7,
+            "timing": "3日以内",
+            "channel": "リターゲティング広告",
+            "reason": "まだ購入実績がない"
+        })
+    elif engagement > 0.7:
+        next_actions.append({
+            "action": "アップセル・クロスセル提案",
+            "probability": 0.8,
+            "timing": "次回接触時",
+            "channel": "パーソナライズドメール",
+            "reason": "高いエンゲージメント"
+        })
+    
+    # デフォルトアクション
+    if not next_actions:
+        next_actions.append({
+            "action": "エンゲージメント向上コンテンツ配信",
+            "probability": 0.5,
+            "timing": "2週間以内",
+            "channel": "ニュースレター",
+            "reason": "関係性維持・向上"
+        })
+    
+    return {
+        "next_actions": next_actions,
+        "risk_assessment": {
+            "churn_risk": churn_prob,
+            "engagement_trend": "increasing" if engagement > 0.6 else "stable" if engagement > 0.3 else "decreasing",
+            "value_potential": "high" if purchases > 3 else "medium" if purchases > 0 else "unknown"
+        },
+        "optimization_suggestions": [
+            "パーソナライゼーション強化でエンゲージメント向上",
+            "タイミング最適化で転換率改善",
+            "チャネル横断的な顧客体験統一"
+        ],
+        "confidence_score": 0.75,
+        "ai_generated": False,
+        "timestamp": datetime.now().isoformat()
+    }
+
+async def predict_customer_segment_ai(customer_data: Dict) -> Dict[str, Any]:
+    """AI駆動の顧客セグメント予測"""
+    USE_MOCK_AI = os.getenv('USE_MOCK_AI', 'false').lower() == 'true'
+    
+    if USE_MOCK_AI:
+        return predict_customer_segment_mock(customer_data)
+    
+    try:
+        from config.ai_client import ai_client
+        from config.ai_models import TaskType
+        
+        segment_prompt = f"""
+        顧客データから最適なセグメントを予測してください：
+
+        顧客データ:
+        - LTV: {customer_data.get('ltv', 0)}
+        - 購入回数: {customer_data.get('total_purchases', 0)}
+        - エンゲージメント: {customer_data.get('engagement_score', 0):.2f}
+        - チャーンリスク: {customer_data.get('churn_probability', 0):.2f}
+        - アクティブ期間: {(datetime.now() - customer_data.get('acquisition_date', datetime.now())).days}日
+
+        以下のセグメントから最適なものを選択し、JSON形式で回答してください：
+        1. High-Value Champions（高価値チャンピオン）
+        2. Potential Loyalists（ロイヤル候補）
+        3. New Customers（新規顧客）
+        4. At-Risk Customers（リスク顧客）
+        5. Cannot Lose Them（失ってはいけない顧客）
+
+        {{
+            "predicted_segment": "セグメント名",
+            "confidence": 0.85,
+            "characteristics": ["特徴1", "特徴2", "特徴3"],
+            "recommended_strategy": "推奨戦略",
+            "reason": "セグメント選択理由"
+        }}
+        """
+        
+        response = await ai_client.chat_completion(
+            messages=[{"role": "user", "content": segment_prompt}],
+            task_type=TaskType.DATA_ANALYSIS
+        )
+        
+        import json
+        try:
+            result = json.loads(response['content'])
+            result['ai_generated'] = True
+            return result
+        except json.JSONDecodeError:
+            return predict_customer_segment_mock(customer_data)
+            
+    except Exception as e:
+        print(f"AI segment prediction error: {e}")
+        return predict_customer_segment_mock(customer_data)
+
+def predict_customer_segment_mock(customer_data: Dict) -> Dict[str, Any]:
+    """顧客セグメント予測のモック版"""
+    ltv = customer_data.get('ltv', 0)
+    purchases = customer_data.get('total_purchases', 0)
+    engagement = customer_data.get('engagement_score', 0)
+    churn_risk = customer_data.get('churn_probability', 0)
+    
+    # ルールベースのセグメント分類
+    if ltv > 50000 and purchases > 5 and engagement > 0.8:
+        return {
+            "predicted_segment": "High-Value Champions",
+            "confidence": 0.9,
+            "characteristics": ["高いLTV", "リピート購入", "高エンゲージメント"],
+            "recommended_strategy": "VIP待遇とパーソナライズされた体験提供",
+            "reason": "高価値顧客の特徴を満たしている",
+            "ai_generated": False
+        }
+    elif churn_risk > 0.6:
+        return {
+            "predicted_segment": "At-Risk Customers",
+            "confidence": 0.8,
+            "characteristics": ["高チャーンリスク", "エンゲージメント低下"],
+            "recommended_strategy": "チャーン防止キャンペーンと関係修復",
+            "reason": "高いチャーンリスクを検出",
+            "ai_generated": False
+        }
+    elif purchases == 0:
+        return {
+            "predicted_segment": "New Customers",
+            "confidence": 0.85,
+            "characteristics": ["新規獲得", "未購入", "ポテンシャル未知"],
+            "recommended_strategy": "オンボーディングと初回購入促進",
+            "reason": "まだ購入実績がない新規顧客",
+            "ai_generated": False
+        }
+    elif engagement > 0.7 and purchases > 1:
+        return {
+            "predicted_segment": "Potential Loyalists",
+            "confidence": 0.75,
+            "characteristics": ["複数購入", "高エンゲージメント", "成長ポテンシャル"],
+            "recommended_strategy": "ロイヤルティプログラムと継続的な価値提供",
+            "reason": "ロイヤル顧客化のポテンシャル",
+            "ai_generated": False
+        }
+    else:
+        return {
+            "predicted_segment": "Potential Loyalists",
+            "confidence": 0.6,
+            "characteristics": ["標準的な行動パターン", "安定的な関係"],
+            "recommended_strategy": "継続的なエンゲージメント向上",
+            "reason": "一般的な顧客行動パターン",
+            "ai_generated": False
+        }
 
 def hex_to_rgb(hex_color):
     """HEXカラーコードをRGBに変換"""
@@ -654,52 +905,85 @@ def segment_customers(customers):
     return segments
 
 def predict_next_action(customer):
-    """次のアクション予測"""
-    # 簡易的な予測ロジック
-    actions = []
-    
-    if customer['churn_probability'] > 0.7:
-        actions.append({
-            'action': 'チャーン防止キャンペーン',
-            'probability': customer['churn_probability'],
-            'timing': '即座に',
-            'channel': 'Email + SMS'
-        })
-    
-    if customer['total_purchases'] == 0 and (datetime.now() - customer['acquisition_date']).days > 7:
-        actions.append({
-            'action': '初回購入促進',
-            'probability': 0.6,
-            'timing': '3日以内',
-            'channel': 'Retargeting Ad'
-        })
-    
-    if customer['engagement_score'] > 0.8 and customer['total_purchases'] > 2:
-        actions.append({
-            'action': 'アップセル提案',
-            'probability': 0.7,
-            'timing': '次回訪問時',
-            'channel': 'In-app Message'
-        })
-    
-    days_since_purchase = (datetime.now() - customer['last_purchase']).days
-    if 30 <= days_since_purchase <= 60:
-        actions.append({
-            'action': 'リピート購入促進',
-            'probability': 0.5,
-            'timing': '1週間以内',
-            'channel': 'Email'
-        })
-    
-    if not actions:
-        actions.append({
-            'action': 'エンゲージメント向上',
-            'probability': 0.4,
-            'timing': '2週間以内',
-            'channel': 'Social Media'
-        })
-    
-    return actions
+    """次のアクション予測（AI機能統合版）"""
+    # AI分析を実行（非同期関数を同期的に呼び出し）
+    try:
+        # ダミージャーニーデータ
+        journey_data = {
+            'total_customers': 1000,
+            'journey_metrics': {
+                'Awareness': {'count': 500},
+                'Consideration': {'count': 300},
+                'Purchase': {'count': 150}
+            }
+        }
+        
+        # 非同期関数を同期実行
+        loop = None
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        if loop.is_running():
+            # 既に実行中のループがある場合は新しいタスクを作成
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(asyncio.run, analyze_customer_journey_with_ai(customer, journey_data))
+                result = future.result(timeout=10)
+        else:
+            result = loop.run_until_complete(analyze_customer_journey_with_ai(customer, journey_data))
+        
+        return result.get('next_actions', [])
+        
+    except Exception as e:
+        print(f"AI prediction error: {e}")
+        # フォールバック：シンプルな予測ロジック
+        actions = []
+        
+        if customer['churn_probability'] > 0.7:
+            actions.append({
+                'action': 'チャーン防止キャンペーン',
+                'probability': customer['churn_probability'],
+                'timing': '即座に',
+                'channel': 'Email + SMS'
+            })
+        
+        if customer['total_purchases'] == 0 and (datetime.now() - customer['acquisition_date']).days > 7:
+            actions.append({
+                'action': '初回購入促進',
+                'probability': 0.6,
+                'timing': '3日以内',
+                'channel': 'Retargeting Ad'
+            })
+        
+        if customer['engagement_score'] > 0.8 and customer['total_purchases'] > 2:
+            actions.append({
+                'action': 'アップセル提案',
+                'probability': 0.7,
+                'timing': '次回訪問時',
+                'channel': 'In-app Message'
+            })
+        
+        days_since_purchase = (datetime.now() - customer['last_purchase']).days
+        if 30 <= days_since_purchase <= 60:
+            actions.append({
+                'action': 'リピート購入促進',
+                'probability': 0.5,
+                'timing': '1週間以内',
+                'channel': 'Email'
+            })
+        
+        if not actions:
+            actions.append({
+                'action': 'エンゲージメント向上',
+                'probability': 0.4,
+                'timing': '2週間以内',
+                'channel': 'Social Media'
+            })
+        
+        return actions
 
 def calculate_journey_metrics(customers):
     """ジャーニーメトリクスを計算"""
@@ -1177,6 +1461,109 @@ with tabs[2]:
                 </div>
             </div>
             """, unsafe_allow_html=True)
+    
+    # AI分析結果セクション
+    st.markdown("---")
+    st.markdown("#### 🤖 AI詳細分析結果")
+    
+    # AI分析を実行して結果を表示
+    try:
+        # ダミージャーニーデータ
+        journey_data = {
+            'total_customers': len(customers),
+            'journey_metrics': journey_metrics
+        }
+        
+        # 非同期関数を同期実行
+        loop = None
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        if loop.is_running():
+            # 既に実行中のループがある場合は新しいタスクを作成
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(asyncio.run, analyze_customer_journey_with_ai(selected_customer, journey_data))
+                ai_analysis = future.result(timeout=10)
+        else:
+            ai_analysis = loop.run_until_complete(analyze_customer_journey_with_ai(selected_customer, journey_data))
+        
+        # AI分析結果を表示
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("##### 📊 リスク評価")
+            risk_assessment = ai_analysis.get('risk_assessment', {})
+            
+            # チャーンリスク
+            churn_risk = risk_assessment.get('churn_risk', 0.3)
+            risk_color = "#ef4444" if churn_risk > 0.6 else "#f59e0b" if churn_risk > 0.3 else "#10b981"
+            
+            st.markdown(f"""
+            <div class="prediction-insight" style="border-left-color: {risk_color};">
+                <div class="insight-title">⚠️ チャーンリスク</div>
+                <div style="font-size: 2rem; color: {risk_color}; font-weight: bold;">
+                    {churn_risk*100:.1f}%
+                </div>
+                <div style="color: #94a3b8;">
+                    トレンド: {risk_assessment.get('engagement_trend', 'stable')}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # 価値ポテンシャル
+            value_potential = risk_assessment.get('value_potential', 'medium')
+            value_colors = {'high': '#10b981', 'medium': '#f59e0b', 'low': '#ef4444', 'unknown': '#6b7280'}
+            value_color = value_colors.get(value_potential, '#6b7280')
+            
+            st.markdown(f"""
+            <div class="prediction-insight" style="border-left-color: {value_color};">
+                <div class="insight-title">💎 価値ポテンシャル</div>
+                <div style="font-size: 1.5rem; color: {value_color}; font-weight: bold;">
+                    {value_potential.upper()}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown("##### 🎯 最適化提案")
+            suggestions = ai_analysis.get('optimization_suggestions', [])
+            
+            for i, suggestion in enumerate(suggestions, 1):
+                st.markdown(f"""
+                <div class="optimization-card">
+                    <div class="optimization-header">
+                        <div class="optimization-title">提案 {i}</div>
+                    </div>
+                    <div style="color: #94a3b8;">
+                        {suggestion}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        # AI信頼度スコア
+        confidence = ai_analysis.get('confidence_score', 0.75)
+        ai_generated = ai_analysis.get('ai_generated', False)
+        
+        st.markdown(f"""
+        <div style="text-align: center; margin: 20px 0;">
+            <div style="color: #06b6d4;">
+                {'🤖' if ai_generated else '📊'} 
+                {'AI分析' if ai_generated else 'ルールベース分析'} | 
+                信頼度: {confidence*100:.1f}%
+            </div>
+            <div style="color: #64748b; font-size: 0.8rem;">
+                分析時刻: {ai_analysis.get('timestamp', datetime.now().isoformat())[:19]}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    except Exception as e:
+        st.warning(f"AI分析でエラーが発生しました: {str(e)}")
+        st.info("ルールベース分析にフォールバックしています")
     
     # 予測トレンド
     st.markdown("#### 📈 行動予測トレンド")

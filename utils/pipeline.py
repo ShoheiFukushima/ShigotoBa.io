@@ -48,7 +48,10 @@ class PipelineEventBus:
     def emit(self, event_type: str, data: Dict):
         """イベントを発火"""
         for listener in self.listeners[event_type]:
-            asyncio.create_task(listener(data))
+            if asyncio.iscoroutinefunction(listener):
+                asyncio.create_task(listener(data))
+            else:
+                listener(data)
     
     def on(self, event_type: str, handler: Callable):
         """イベントリスナーを登録"""

@@ -131,6 +131,14 @@ def init_common_session_state():
     """共通のセッション状態を初期化"""
     init_session_state(COMMON_SESSION_CONFIG)
     
+    # Google Sheetsとの同期を試みる
+    try:
+        from .google_sheets_db import sync_sheets_to_session
+        sync_sheets_to_session()
+    except Exception as e:
+        # エラーが発生してもアプリは動作するようにする
+        pass
+    
 def init_shigotoba_session_state():
     """Shigotoba.io用のセッション状態を初期化"""
     init_session_state(SHIGOTOBA_SESSION_CONFIG)

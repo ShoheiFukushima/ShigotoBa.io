@@ -11,6 +11,338 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import asyncio
+import os
+from datetime import datetime
+from typing import Dict, List, Any, Optional
+
+# AI価格戦略分析関数
+async def analyze_pricing_strategy_with_ai(
+    product_data: Dict, 
+    market_data: Dict, 
+    financial_data: Dict
+) -> Dict[str, Any]:
+    """AI駆動の価格戦略分析"""
+    USE_MOCK_AI = os.getenv('USE_MOCK_AI', 'false').lower() == 'true'
+    
+    if USE_MOCK_AI:
+        return analyze_pricing_strategy_mock(product_data, market_data, financial_data)
+    
+    try:
+        from config.ai_client import ai_client
+        from config.ai_models import TaskType
+        
+        analysis_prompt = f"""
+        製品の価格戦略を分析してください：
+
+        製品情報:
+        - 製品タイプ: {product_data.get('type', 'unknown')}
+        - 機能数: {product_data.get('features', 0)}
+        - 開発期間: {product_data.get('development_months', 0)}ヶ月
+        - チーム規模: {product_data.get('team_size', 1)}人
+
+        市場データ:
+        - ターゲット市場規模: {market_data.get('market_size', 0)}
+        - 競合製品数: {market_data.get('competitors', 0)}
+        - 平均価格帯: {market_data.get('avg_price', 0)}円
+
+        財務データ:
+        - 開発コスト: {financial_data.get('development_cost', 0)}円
+        - 月間固定費: {financial_data.get('monthly_cost', 0)}円
+        - 目標利益率: {financial_data.get('target_margin', 30)}%
+
+        以下の形式でJSON回答してください：
+        {{
+            "recommended_pricing_strategy": {{
+                "strategy_type": "価格戦略名（penetration/skimming/competitive/value_based）",
+                "base_price": 9800,
+                "price_tiers": [
+                    {{"name": "Basic", "price": 1980, "features": ["機能A"]}},
+                    {{"name": "Pro", "price": 4980, "features": ["機能A", "機能B"]}},
+                    {{"name": "Enterprise", "price": 9800, "features": ["全機能"]}}
+                ],
+                "reasoning": "戦略選択の理由"
+            }},
+            "market_positioning": {{
+                "competitive_advantage": ["差別化要因1", "差別化要因2"],
+                "target_segments": ["セグメント1", "セグメント2"],
+                "value_proposition": "価値提案"
+            }},
+            "pricing_optimization": {{
+                "psychological_pricing": true,
+                "bundling_opportunities": ["バンドル案1", "バンドル案2"],
+                "discount_strategy": "適切な割引戦略",
+                "freemium_viability": 0.8
+            }},
+            "financial_projections": {{
+                "break_even_units": 100,
+                "monthly_revenue_potential": 500000,
+                "ltv_estimate": 50000,
+                "payback_period_months": 6
+            }},
+            "recommendations": [
+                "具体的な推奨事項1",
+                "具体的な推奨事項2",
+                "具体的な推奨事項3"
+            ],
+            "confidence_score": 0.85
+        }}
+        """
+        
+        response = await ai_client.chat_completion(
+            messages=[{"role": "user", "content": analysis_prompt}],
+            task_type=TaskType.DATA_ANALYSIS
+        )
+        
+        import json
+        try:
+            result = json.loads(response['content'])
+            result['ai_generated'] = True
+            result['timestamp'] = datetime.now().isoformat()
+            return result
+        except json.JSONDecodeError:
+            return analyze_pricing_strategy_mock(product_data, market_data, financial_data)
+            
+    except Exception as e:
+        print(f"AI pricing analysis error: {e}")
+        return analyze_pricing_strategy_mock(product_data, market_data, financial_data)
+
+def analyze_pricing_strategy_mock(
+    product_data: Dict, 
+    market_data: Dict, 
+    financial_data: Dict
+) -> Dict[str, Any]:
+    """価格戦略分析のモック版"""
+    
+    # 基本的な計算
+    dev_cost = financial_data.get('development_cost', 1000000)
+    monthly_cost = financial_data.get('monthly_cost', 100000)
+    target_margin = financial_data.get('target_margin', 30) / 100
+    market_size = market_data.get('market_size', 10000)
+    avg_price = market_data.get('avg_price', 5000)
+    
+    # 戦略タイプの決定
+    if avg_price > 10000:
+        strategy_type = "penetration"  # 市場浸透価格
+        base_price = int(avg_price * 0.7)
+    elif market_size > 50000:
+        strategy_type = "competitive"  # 競争価格
+        base_price = int(avg_price * 0.9)
+    else:
+        strategy_type = "value_based"  # 価値ベース価格
+        base_price = int(avg_price * 1.2)
+    
+    # 価格ティアの生成
+    price_tiers = [
+        {
+            "name": "Starter",
+            "price": int(base_price * 0.4),
+            "features": ["基本機能", "標準サポート"]
+        },
+        {
+            "name": "Professional", 
+            "price": base_price,
+            "features": ["全機能", "優先サポート", "詳細分析"]
+        },
+        {
+            "name": "Enterprise",
+            "price": int(base_price * 2),
+            "features": ["全機能", "専任サポート", "カスタマイズ", "API"]
+        }
+    ]
+    
+    # 収益性計算
+    estimated_conversion = 0.02 if strategy_type == "penetration" else 0.015
+    monthly_customers = int(market_size * estimated_conversion)
+    monthly_revenue = monthly_customers * base_price
+    break_even_units = int((dev_cost / 12 + monthly_cost) / (base_price * target_margin))
+    
+    return {
+        "recommended_pricing_strategy": {
+            "strategy_type": strategy_type,
+            "base_price": base_price,
+            "price_tiers": price_tiers,
+            "reasoning": f"{strategy_type}戦略により市場シェア獲得と収益性のバランスを図る"
+        },
+        "market_positioning": {
+            "competitive_advantage": ["コストパフォーマンス", "ユーザビリティ", "カスタマーサポート"],
+            "target_segments": ["スタートアップ", "中小企業", "個人事業主"],
+            "value_proposition": "手軽に始められる高機能ソリューション"
+        },
+        "pricing_optimization": {
+            "psychological_pricing": True,
+            "bundling_opportunities": ["年間プラン（20%割引）", "複数機能パック"],
+            "discount_strategy": "新規顧客30日間無料トライアル",
+            "freemium_viability": 0.7
+        },
+        "financial_projections": {
+            "break_even_units": break_even_units,
+            "monthly_revenue_potential": monthly_revenue,
+            "ltv_estimate": int(base_price * 8),  # 平均8ヶ月利用想定
+            "payback_period_months": max(3, int(dev_cost / monthly_revenue)) if monthly_revenue > 0 else 12
+        },
+        "recommendations": [
+            f"市場平均より{'低い' if strategy_type == 'penetration' else '競争力のある'}価格設定で参入",
+            "多層価格体系でさまざまな顧客ニーズに対応",
+            "無料トライアルで導入ハードルを下げる",
+            "年間契約による割引で顧客ロイヤルティ向上",
+            "定期的な価格見直しで市場変化に対応"
+        ],
+        "confidence_score": 0.75,
+        "ai_generated": False,
+        "timestamp": datetime.now().isoformat()
+    }
+
+async def optimize_price_with_ai(
+    current_price: float,
+    performance_data: Dict,
+    goals: Dict
+) -> Dict[str, Any]:
+    """AI駆動の価格最適化"""
+    USE_MOCK_AI = os.getenv('USE_MOCK_AI', 'false').lower() == 'true'
+    
+    if USE_MOCK_AI:
+        return optimize_price_mock(current_price, performance_data, goals)
+    
+    try:
+        from config.ai_client import ai_client
+        from config.ai_models import TaskType
+        
+        optimization_prompt = f"""
+        価格最適化の提案をしてください：
+
+        現在の価格: {current_price}円
+        
+        パフォーマンスデータ:
+        - 月間新規顧客: {performance_data.get('monthly_new_customers', 0)}
+        - 解約率: {performance_data.get('churn_rate', 0.05)*100}%
+        - 顧客満足度: {performance_data.get('satisfaction_score', 3.5)}/5
+        - コンバージョン率: {performance_data.get('conversion_rate', 0.02)*100}%
+
+        目標:
+        - 収益目標: {goals.get('revenue_target', 1000000)}円/月
+        - 顧客数目標: {goals.get('customer_target', 500)}人
+        - 利益率目標: {goals.get('margin_target', 30)}%
+
+        以下の形式でJSON回答してください：
+        {{
+            "optimized_prices": {{
+                "recommended_price": 8800,
+                "price_range": {{"min": 7800, "max": 9800}},
+                "adjustment_percentage": 10.5,
+                "reasoning": "最適化の根拠"
+            }},
+            "ab_test_suggestions": [
+                {{"price": 8500, "expected_conversion": 0.025, "risk_level": "low"}},
+                {{"price": 9200, "expected_conversion": 0.018, "risk_level": "medium"}}
+            ],
+            "timing_strategy": {{
+                "implementation_timeline": "段階的実装スケジュール",
+                "grandfathering_strategy": "既存顧客への対応",
+                "announcement_timing": "発表タイミング"
+            }},
+            "expected_impact": {{
+                "revenue_change": 15.2,
+                "customer_change": -5.0,
+                "conversion_change": 8.5
+            }},
+            "risks_and_mitigation": [
+                "リスク要因と対策"
+            ],
+            "monitoring_metrics": [
+                "監視すべき指標"
+            ]
+        }}
+        """
+        
+        response = await ai_client.chat_completion(
+            messages=[{"role": "user", "content": optimization_prompt}],
+            task_type=TaskType.DATA_ANALYSIS
+        )
+        
+        import json
+        try:
+            result = json.loads(response['content'])
+            result['ai_generated'] = True
+            return result
+        except json.JSONDecodeError:
+            return optimize_price_mock(current_price, performance_data, goals)
+            
+    except Exception as e:
+        print(f"AI price optimization error: {e}")
+        return optimize_price_mock(current_price, performance_data, goals)
+
+def optimize_price_mock(current_price: float, performance_data: Dict, goals: Dict) -> Dict[str, Any]:
+    """価格最適化のモック版"""
+    
+    conversion_rate = performance_data.get('conversion_rate', 0.02)
+    satisfaction = performance_data.get('satisfaction_score', 3.5)
+    churn_rate = performance_data.get('churn_rate', 0.05)
+    
+    # 最適化ロジック
+    price_elasticity = -0.5  # 価格弾力性仮定
+    
+    # 顧客満足度に基づく価格調整余地
+    if satisfaction > 4.0:
+        price_multiplier = 1.1  # 10%値上げ余地
+    elif satisfaction < 3.0:
+        price_multiplier = 0.9  # 10%値下げ推奨
+    else:
+        price_multiplier = 1.0
+    
+    # 解約率に基づく調整
+    if churn_rate > 0.1:
+        price_multiplier *= 0.95  # 価格競争力向上
+    
+    recommended_price = int(current_price * price_multiplier)
+    adjustment_percentage = (recommended_price / current_price - 1) * 100
+    
+    return {
+        "optimized_prices": {
+            "recommended_price": recommended_price,
+            "price_range": {
+                "min": int(recommended_price * 0.9),
+                "max": int(recommended_price * 1.1)
+            },
+            "adjustment_percentage": adjustment_percentage,
+            "reasoning": f"顧客満足度{satisfaction:.1f}と解約率{churn_rate*100:.1f}%を考慮した最適化"
+        },
+        "ab_test_suggestions": [
+            {
+                "price": int(current_price * 0.95),
+                "expected_conversion": conversion_rate * 1.1,
+                "risk_level": "low"
+            },
+            {
+                "price": int(current_price * 1.05),
+                "expected_conversion": conversion_rate * 0.95,
+                "risk_level": "medium"
+            }
+        ],
+        "timing_strategy": {
+            "implementation_timeline": "3段階で4週間かけて実装",
+            "grandfathering_strategy": "既存顧客は3ヶ月据え置き",
+            "announcement_timing": "実装2週間前に事前告知"
+        },
+        "expected_impact": {
+            "revenue_change": adjustment_percentage * 0.7,  # 価格弾力性考慮
+            "customer_change": adjustment_percentage * price_elasticity,
+            "conversion_change": -adjustment_percentage * 0.3
+        },
+        "risks_and_mitigation": [
+            "既存顧客の離脱リスク → 段階的移行でソフトランディング",
+            "競合他社の価格対応 → 差別化価値の強化",
+            "市場の価格感度 → A/Bテストで慎重に検証"
+        ],
+        "monitoring_metrics": [
+            "月間新規登録数",
+            "解約率",
+            "顧客満足度スコア",
+            "価格に関する問い合わせ数",
+            "競合比較サイトでの評価"
+        ],
+        "ai_generated": False
+    }
 
 # ページ設定
 st.set_page_config(
@@ -426,6 +758,149 @@ with tab2:
             - **価格弾力性**: {'高' if penetration_rate > 50 else '中' if penetration_rate > 30 else '低'}
             - **推奨戦略**: {'段階的値上げ' if penetration_rate > 40 else 'プレミアム戦略'}
             """)
+        
+        # AI価格戦略分析セクション
+        st.markdown("---")
+        st.markdown("### 🤖 AI価格戦略分析")
+        
+        # AI分析実行ボタン
+        if st.button("🔍 AI戦略分析を実行", key="ai_pricing_analysis"):
+            # 入力データを整理
+            product_data = {
+                'type': 'SaaS',  # デフォルト
+                'features': 10,  # 仮想値
+                'development_months': 6,
+                'team_size': 3
+            }
+            
+            market_data = {
+                'market_size': 100000,  # 仮想値
+                'competitors': 15,
+                'avg_price': optimal_price
+            }
+            
+            financial_data = {
+                'development_cost': 2000000,  # 仮想値
+                'monthly_cost': 200000,
+                'target_margin': 40
+            }
+            
+            with st.spinner("AI分析を実行中..."):
+                try:
+                    # 非同期関数を同期実行
+                    loop = None
+                    try:
+                        loop = asyncio.get_event_loop()
+                    except RuntimeError:
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                    
+                    if loop.is_running():
+                        import concurrent.futures
+                        with concurrent.futures.ThreadPoolExecutor() as executor:
+                            future = executor.submit(
+                                asyncio.run, 
+                                analyze_pricing_strategy_with_ai(product_data, market_data, financial_data)
+                            )
+                            ai_analysis = future.result(timeout=15)
+                    else:
+                        ai_analysis = loop.run_until_complete(
+                            analyze_pricing_strategy_with_ai(product_data, market_data, financial_data)
+                        )
+                    
+                    # AI分析結果を表示
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.markdown("#### 💡 AI推奨価格戦略")
+                        strategy = ai_analysis.get('recommended_pricing_strategy', {})
+                        
+                        st.markdown(f"""
+                        <div class="result-highlight">
+                            <strong>戦略タイプ:</strong> {strategy.get('strategy_type', 'N/A')}<br>
+                            <strong>推奨価格:</strong> ¥{strategy.get('base_price', 0):,}<br>
+                            <strong>理由:</strong> {strategy.get('reasoning', 'N/A')}
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # 価格ティア表示
+                        st.markdown("##### 📊 推奨価格ティア")
+                        price_tiers = strategy.get('price_tiers', [])
+                        for tier in price_tiers:
+                            st.markdown(f"""
+                            **{tier.get('name', 'N/A')}**: ¥{tier.get('price', 0):,}
+                            - {', '.join(tier.get('features', []))}
+                            """)
+                    
+                    with col2:
+                        st.markdown("#### 🎯 市場ポジショニング")
+                        positioning = ai_analysis.get('market_positioning', {})
+                        
+                        st.markdown("**競争優位性:**")
+                        for advantage in positioning.get('competitive_advantage', []):
+                            st.markdown(f"• {advantage}")
+                        
+                        st.markdown("**ターゲットセグメント:**")
+                        for segment in positioning.get('target_segments', []):
+                            st.markdown(f"• {segment}")
+                        
+                        st.markdown(f"**価値提案:** {positioning.get('value_proposition', 'N/A')}")
+                    
+                    # 財務予測
+                    st.markdown("#### 💹 財務予測")
+                    projections = ai_analysis.get('financial_projections', {})
+                    
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("損益分岐点", f"{projections.get('break_even_units', 0)}件")
+                    with col2:
+                        st.metric("月間売上予測", f"¥{projections.get('monthly_revenue_potential', 0):,}")
+                    with col3:
+                        st.metric("LTV予測", f"¥{projections.get('ltv_estimate', 0):,}")
+                    with col4:
+                        st.metric("回収期間", f"{projections.get('payback_period_months', 0)}ヶ月")
+                    
+                    # 推奨事項
+                    st.markdown("#### ✨ AI推奨事項")
+                    recommendations = ai_analysis.get('recommendations', [])
+                    for i, rec in enumerate(recommendations, 1):
+                        st.markdown(f"{i}. {rec}")
+                    
+                    # 最適化機会
+                    optimization = ai_analysis.get('pricing_optimization', {})
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.markdown("**バンドリング機会:**")
+                        for opportunity in optimization.get('bundling_opportunities', []):
+                            st.markdown(f"• {opportunity}")
+                    
+                    with col2:
+                        freemium_score = optimization.get('freemium_viability', 0)
+                        st.markdown(f"**フリーミアム適性:** {freemium_score*100:.0f}%")
+                        st.progress(freemium_score)
+                        st.markdown(f"**割引戦略:** {optimization.get('discount_strategy', 'N/A')}")
+                    
+                    # 信頼度スコア
+                    confidence = ai_analysis.get('confidence_score', 0.75)
+                    ai_generated = ai_analysis.get('ai_generated', False)
+                    
+                    st.markdown(f"""
+                    <div style="text-align: center; margin: 20px 0; padding: 15px; background: rgba(34, 197, 94, 0.1); border-radius: 8px;">
+                        <div style="color: #22c55e;">
+                            {'🤖' if ai_generated else '📊'} 
+                            {'AI分析' if ai_generated else 'ルールベース分析'} | 
+                            信頼度: {confidence*100:.1f}%
+                        </div>
+                        <div style="color: #64748b; font-size: 0.8rem;">
+                            分析時刻: {ai_analysis.get('timestamp', datetime.now().isoformat())[:19]}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                except Exception as e:
+                    st.error(f"AI分析でエラーが発生しました: {str(e)}")
+                    st.info("手動でデータを入力して基本的な価格戦略を検討してください。")
 
 # タブ3: LTV/CAC計算機
 with tab3:

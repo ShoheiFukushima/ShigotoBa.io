@@ -88,7 +88,8 @@ def render_search_box() -> Optional[str]:
     search_query = st.text_input(
         "🔍 ツールを検索",
         placeholder="例: タスク管理、AI、広告...",
-        key="tool_search"
+        key="tool_search",
+        autocomplete="off"
     )
     return search_query
 
@@ -182,7 +183,8 @@ def render_search_modal():
             "",
             placeholder="ツールを検索... (ESCで閉じる)",
             key="modal_search",
-            label_visibility="collapsed"
+            label_visibility="collapsed",
+            autocomplete="off"
         )
         
         # 検索結果

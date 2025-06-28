@@ -453,7 +453,8 @@ def render_post_editor():
             hashtags = st.text_input(
                 "ハッシュタグ（カンマ区切り）",
                 key=f"hashtags_{platform_key}",
-                placeholder="マーケティング, 自動化, AI"
+                placeholder="マーケティング, 自動化, AI",
+                autocomplete="off"
             )
             
             hashtag_list = [tag.strip() for tag in hashtags.split(",") if tag.strip()]

@@ -461,7 +461,8 @@ if st.session_state.new_product_step == 1:
             product_name = st.text_input(
                 "プロダクト名 *",
                 placeholder="例: TaskFlow AI",
-                help="覚えやすく、ブランド化しやすい名前を選びましょう"
+                help="覚えやすく、ブランド化しやすい名前を選びましょう",
+                autocomplete="off"
             )
             
             product_category = st.selectbox(
@@ -602,7 +603,8 @@ elif st.session_state.new_product_step == 2:
         with col1:
             market_size = st.text_input(
                 "市場規模",
-                placeholder="例: 国内500億円、年成長率15%"
+                placeholder="例: 国内500億円、年成長率15%",
+                autocomplete="off"
             )
             
             main_competitors = st.text_area(
@@ -712,25 +714,29 @@ elif st.session_state.new_product_step == 3:
             frontend_input = st.text_input(
                 "フロントエンド技術",
                 placeholder="例: Next.js + TypeScript + TailwindCSS",
-                help="Gemで決定した技術を入力"
+                help="Gemで決定した技術を入力",
+                autocomplete="off"
             )
             
             backend_input = st.text_input(
                 "バックエンド技術",
                 placeholder="例: Python FastAPI",
-                help="Gemで決定した技術を入力"
+                help="Gemで決定した技術を入力",
+                autocomplete="off"
             )
             
             database_input = st.text_input(
                 "データベース",
                 placeholder="例: PostgreSQL + Redis",
-                help="Gemで決定した技術を入力"
+                help="Gemで決定した技術を入力",
+                autocomplete="off"
             )
             
             deploy_input = st.text_input(
                 "デプロイ環境",
                 placeholder="例: Vercel + AWS",
-                help="Gemで決定した技術を入力"
+                help="Gemで決定した技術を入力",
+                autocomplete="off"
             )
         
         with col2:
@@ -756,7 +762,8 @@ elif st.session_state.new_product_step == 3:
         project_path = st.text_input(
             "プロジェクトパス名（英語）",
             placeholder="例: marketing-flow-dashboard",
-            help="プロジェクトフォルダ名を英語で入力"
+            help="プロジェクトフォルダ名を英語で入力",
+            autocomplete="off"
         )
         
         if st.form_submit_button("次のステップへ →", type="primary", use_container_width=True):
@@ -1052,6 +1059,8 @@ elif st.session_state.new_product_step == 6:
             st.session_state.projects[project_id] = {
                 'id': project_id,
                 'name': draft.get('name', '新規プロダクト'),
+                'type': 'dev',
+                'status': '開発中',
                 'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 'flow_stage': 0,
                 'flow_data': {
@@ -1068,7 +1077,30 @@ elif st.session_state.new_product_step == 6:
                     'competitors': draft.get('main_competitors', '').split('\n'),
                     'market_trends': draft.get('market_trends', '').split('\n'),
                     'competitive_advantage': draft.get('competitive_advantage', '').split('\n')
-                }
+                },
+                'tech_stack': {
+                    'frontend': draft.get('frontend_stack'),
+                    'backend': draft.get('backend_stack'),
+                    'database': draft.get('database_stack'),
+                    'deploy': draft.get('deploy_stack')
+                },
+                'requirements': {
+                    'functional': draft.get('functional_requirements'),
+                    'quality': draft.get('quality_requirements')
+                },
+                'features': {
+                    'mvp': draft.get('mvp_features'),
+                    'future': draft.get('future_features')
+                },
+                'business': {
+                    'pricing_model': draft.get('pricing_model'),
+                    'free_plan': draft.get('free_plan'),
+                    'pro_plan': draft.get('pro_plan'),
+                    'enterprise_plan': draft.get('enterprise_plan'),
+                    'launch_strategy': draft.get('launch_strategy'),
+                    'success_metrics': draft.get('success_metrics')
+                },
+                'project_path': draft.get('project_path')
             }
             
             if 'project_order' not in st.session_state:
@@ -1078,11 +1110,19 @@ elif st.session_state.new_product_step == 6:
             st.session_state.current_project_id = project_id
             st.session_state.flow_stage = 0
             
+            # Google Sheetsに保存
+            try:
+                from utils.google_sheets_db import sync_session_to_sheets
+                sync_session_to_sheets()
+                st.success("プロジェクトを作成し、クラウドに保存しました！")
+            except Exception as e:
+                st.success("プロジェクトを作成しました！")
+                st.warning(f"クラウド保存に失敗しました: {str(e)}")
+            
             # 下書きをクリア
             st.session_state.product_draft = {}
             st.session_state.new_product_step = 1
             
-            st.success("プロジェクトを作成しました！")
             st.switch_page("pages/development_room.py")
 
 # サイドバー

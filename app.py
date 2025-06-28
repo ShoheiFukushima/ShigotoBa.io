@@ -21,6 +21,18 @@ setup_page("shigotoba.io - マーケティング自動化", "🚀", layout="wide
 # セッション状態の初期化（共通設定を使用）
 init_common_session_state()
 
+# Google Sheets接続状態を表示
+try:
+    from utils.google_sheets_db import get_db
+    db = get_db()
+    sheets_connected = db.spreadsheet is not None
+    if sheets_connected:
+        st.success("📊 Google Sheets データベース: 接続済み")
+    else:
+        st.warning("📊 Google Sheets データベース: 未接続 - [設定](/pages/_sheets_settings.py)で接続してください")
+except:
+    st.info("📊 Google Sheets データベース: 設定が必要 - [設定ページ](/pages/_sheets_settings.py)を確認してください")
+
 # サイドバー設定をカスタマイズ
 sidebar_config = get_default_sidebar_config()
 sidebar_config['statistics'] = [

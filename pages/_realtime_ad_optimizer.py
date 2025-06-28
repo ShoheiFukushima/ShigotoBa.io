@@ -1028,9 +1028,9 @@ with tabs[2]:
     
     if recommendations:
         # 非同期関数の呼び出しを修正
-    if asyncio.iscoroutine(recommendations):
-        recommendations = asyncio.run(recommendations)
-    st.markdown(f"#### {len(recommendations)}件の最適化機会を検出")
+        if asyncio.iscoroutine(recommendations):
+            recommendations = asyncio.run(recommendations)
+        st.markdown(f"#### {len(recommendations)}件の最適化機会を検出")
         
         for i, rec in enumerate(recommendations):
             priority_color = {

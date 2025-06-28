@@ -297,7 +297,7 @@ with filter_col2:
     )
 
 with filter_col3:
-    search_term = st.text_input("プロジェクト名検索", placeholder="検索キーワード...")
+    search_term = st.text_input("プロジェクト名検索", placeholder="検索キーワード...", autocomplete="off")
 
 # プロジェクト一覧表示
 st.markdown("### 📋 プロジェクト一覧")

@@ -15,6 +15,134 @@ import plotly.graph_objects as go
 import plotly.express as px
 from typing import Dict, List, Any, Optional
 import uuid
+import asyncio
+
+# AI機能
+async def analyze_multiplatform_with_ai(
+    platform_data: Dict,
+    cross_metrics: Dict,
+    campaigns: Dict
+) -> Dict[str, Any]:
+    """AI駆動のマルチプラットフォーム分析"""
+    try:
+        from config.ai_client import ai_client
+        from config.ai_models import TaskType
+        
+        analysis_prompt = f"""
+        マルチプラットフォーム広告データを分析してください：
+
+        統合メトリクス:
+        - 総広告費: {cross_metrics.get('total_spend', 0):,.0f}円
+        - 総インプレッション: {cross_metrics.get('total_impressions', 0):,}
+        - 統合CTR: {cross_metrics.get('avg_ctr', 0):.2f}%
+        - 総コンバージョン: {cross_metrics.get('total_conversions', 0):,}
+        - 統合ROAS: {cross_metrics.get('total_roas', 0):.2f}x
+        - アクティブキャンペーン: {cross_metrics.get('active_campaigns', 0)}
+
+        プラットフォーム情報:
+        - アクティブプラットフォーム数: {len([p for p, d in platform_data.items() if d.get('api_status') == 'active'])}
+        - 最高ROASプラットフォーム: {max(platform_data.items(), key=lambda x: x[1].get('roas', 0))[0]}
+        - 最低ROASプラットフォーム: {min(platform_data.items(), key=lambda x: x[1].get('roas', 0))[0]}
+        - 総キャンペーン数: {sum(p.get('campaigns', 0) for p in platform_data.values())}
+
+        キャンペーン状況:
+        - アクティブキャンペーン: {len([c for c in campaigns.values() if c.get('status') == 'active'])}
+        - 一時停止キャンペーン: {len([c for c in campaigns.values() if c.get('status') == 'paused'])}
+        - 下書きキャンペーン: {len([c for c in campaigns.values() if c.get('status') == 'draft'])}
+
+        以下の形式でJSON回答してください：
+        {{
+            "platform_optimization": {{
+                "best_performer": "最高パフォーマンスプラットフォーム",
+                "worst_performer": "最低パフォーマンスプラットフォーム",
+                "budget_reallocation_suggestions": [
+                    {{"from": "Facebook", "to": "Google Ads", "amount": 50000, "expected_roi_improvement": 25.5}}
+                ],
+                "platform_specific_insights": [
+                    "インサイト1",
+                    "インサイト2"
+                ]
+            }},
+            "cross_platform_synergies": {{
+                "attribution_insights": [
+                    "クロスプラットフォーム効果1",
+                    "クロスプラットフォーム効果2"
+                ],
+                "audience_overlap": {{
+                    "high_overlap_platforms": ["Facebook", "Instagram"],
+                    "unique_reach_platforms": ["LinkedIn", "TikTok"]
+                }},
+                "sequential_targeting_opportunities": [
+                    "シーケンシャルターゲティング提案1",
+                    "シーケンシャルターゲティング提案2"
+                ]
+            }},
+            "automation_recommendations": {{
+                "urgent_automations": [
+                    {{"rule": "CPA上昇時の自動入札調整", "priority": "high", "estimated_impact": "+15% ROI"}}
+                ],
+                "efficiency_automations": [
+                    {{"rule": "時間帯別予算配分", "priority": "medium", "estimated_impact": "+8% CTR"}}
+                ],
+                "preventive_automations": [
+                    {{"rule": "品質スコア低下アラート", "priority": "low", "estimated_impact": "リスク軽減"}}
+                ]
+            }},
+            "campaign_optimization": {{
+                "underperforming_campaigns": [
+                    "改善が必要なキャンペーン1",
+                    "改善が必要なキャンペーン2"
+                ],
+                "scaling_opportunities": [
+                    "スケールアップ可能なキャンペーン1",
+                    "スケールアップ可能なキャンペーン2"
+                ],
+                "creative_refresh_needed": [
+                    "クリエイティブ更新が必要なキャンペーン1"
+                ]
+            }},
+            "predictive_insights": {{
+                "next_week_forecast": {{
+                    "expected_spend": 850000,
+                    "expected_conversions": 1250,
+                    "expected_roas": 4.2
+                }},
+                "seasonal_trends": [
+                    "季節トレンド予測1",
+                    "季節トレンド予測2"
+                ],
+                "market_opportunities": [
+                    "市場機会1",
+                    "市場機会2"
+                ]
+            }},
+            "recommendations": [
+                "最重要推奨事項1",
+                "最重要推奨事項2",
+                "最重要推奨事項3"
+            ],
+            "confidence_score": 0.92
+        }}
+        """
+        
+        response = await ai_client.generate_content(
+            prompt=analysis_prompt,
+            task_type=TaskType.DATA_ANALYSIS
+        )
+        
+        result = json.loads(response.content)
+        result['ai_generated'] = True
+        result['timestamp'] = datetime.now().isoformat()
+        return result
+            
+    except Exception as e:
+        st.error(f"AI分析エラー: {e}")
+        return {
+            "error": str(e),
+            "ai_generated": False,
+            "timestamp": datetime.now().isoformat()
+        }
+
 
 # ページ設定
 st.set_page_config(
@@ -694,6 +822,198 @@ with tabs[0]:
         """, unsafe_allow_html=True)
         
         st.markdown("---")
+
+# AI分析セクション
+st.markdown("### 🤖 AI高度分析")
+
+if st.button("🔍 AI プラットフォーム分析を実行", key="ai_multiplatform_analysis"):
+    with st.spinner("AI分析を実行中..."):
+        try:
+            # Handle async execution in Streamlit context
+            loop = None
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            if loop.is_running():
+                # Event loop is already running, use a workaround
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(
+                        lambda: asyncio.run(
+                            analyze_multiplatform_with_ai(
+                                platform_data,
+                                cross_metrics,
+                                st.session_state.cross_platform_campaigns
+                            )
+                        )
+                    )
+                    ai_analysis = future.result()
+            else:
+                ai_analysis = loop.run_until_complete(
+                    analyze_multiplatform_with_ai(
+                        platform_data,
+                        cross_metrics,
+                        st.session_state.cross_platform_campaigns
+                    )
+                )
+            
+            st.session_state.multiplatform_ai_analysis = ai_analysis
+            st.success("✅ AI分析が完了しました！")
+            
+        except Exception as e:
+            st.error(f"❌ AI分析でエラーが発生しました: {str(e)}")
+            # フォールバックとしてモック分析を使用
+            ai_analysis = analyze_multiplatform_mock(
+                platform_data,
+                cross_metrics,
+                st.session_state.cross_platform_campaigns
+            )
+            st.session_state.multiplatform_ai_analysis = ai_analysis
+            st.info("📊 モックデータによる分析結果を表示しています")
+
+# AI分析結果の表示
+if 'multiplatform_ai_analysis' in st.session_state:
+    analysis = st.session_state.multiplatform_ai_analysis
+    
+    # プラットフォーム最適化
+    st.markdown("#### 🎯 プラットフォーム最適化")
+    
+    opt = analysis['platform_optimization']
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown(f"**🥇 最高パフォーマンス:** {opt['best_performer']}")
+        st.markdown(f"**📉 改善必要:** {opt['worst_performer']}")
+        
+        # 予算再配分提案
+        if opt['budget_reallocation_suggestions']:
+            suggestion = opt['budget_reallocation_suggestions'][0]
+            st.markdown(f"""**💰 予算再配分提案:**
+            - {suggestion['from']} → {suggestion['to']}
+            - 金額: ¥{suggestion['amount']:,.0f}
+            - 期待ROI向上: +{suggestion['expected_roi_improvement']:.1f}%""")
+    
+    with col2:
+        st.markdown("**📊 プラットフォーム別インサイト:**")
+        for insight in opt['platform_specific_insights']:
+            st.markdown(f"• {insight}")
+    
+    # クロスプラットフォーム相乗効果
+    st.markdown("#### 🔗 クロスプラットフォーム相乗効果")
+    
+    synergies = analysis['cross_platform_synergies']
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**🎯 アトリビューション洞察:**")
+        for insight in synergies['attribution_insights']:
+            st.markdown(f"• {insight}")
+    
+    with col2:
+        st.markdown("**👥 オーディエンス重複分析:**")
+        st.markdown(f"**高重複:** {', '.join(synergies['audience_overlap']['high_overlap_platforms'])}")
+        st.markdown(f"**独自リーチ:** {', '.join(synergies['audience_overlap']['unique_reach_platforms'])}")
+    
+    # シーケンシャルターゲティング機会
+    st.markdown("**🎬 シーケンシャルターゲティング機会:**")
+    for opportunity in synergies['sequential_targeting_opportunities']:
+        st.markdown(f"• {opportunity}")
+    
+    # 自動化推奨
+    st.markdown("#### 🤖 自動化推奨")
+    
+    automation = analysis['automation_recommendations']
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("**🚨 緊急自動化:**")
+        for rule in automation['urgent_automations']:
+            st.markdown(f"""**{rule['rule']}**
+            - 優先度: {rule['priority']}
+            - 効果: {rule['estimated_impact']}""")
+    
+    with col2:
+        st.markdown("**⚡ 効率化自動化:**")
+        for rule in automation['efficiency_automations']:
+            st.markdown(f"""**{rule['rule']}**
+            - 優先度: {rule['priority']}
+            - 効果: {rule['estimated_impact']}""")
+    
+    with col3:
+        st.markdown("**🛡️ 予防的自動化:**")
+        for rule in automation['preventive_automations']:
+            st.markdown(f"""**{rule['rule']}**
+            - 優先度: {rule['priority']}
+            - 効果: {rule['estimated_impact']}""")
+    
+    # キャンペーン最適化
+    st.markdown("#### 📈 キャンペーン最適化")
+    
+    campaign_opt = analysis['campaign_optimization']
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("**📉 改善必要キャンペーン:**")
+        for campaign in campaign_opt['underperforming_campaigns']:
+            st.markdown(f"• {campaign}")
+    
+    with col2:
+        st.markdown("**📈 スケールアップ機会:**")
+        for campaign in campaign_opt['scaling_opportunities']:
+            st.markdown(f"• {campaign}")
+    
+    with col3:
+        st.markdown("**🎨 クリエイティブ更新必要:**")
+        for campaign in campaign_opt['creative_refresh_needed']:
+            st.markdown(f"• {campaign}")
+    
+    # 予測インサイト
+    st.markdown("#### 🔮 予測インサイト")
+    
+    prediction = analysis['predictive_insights']
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        forecast = prediction['next_week_forecast']
+        st.markdown(f"""**📊 来週予測:**
+        - 予想広告費: ¥{forecast['expected_spend']:,}
+        - 予想コンバージョン: {forecast['expected_conversions']:,}
+        - 予想ROAS: {forecast['expected_roas']:.1f}x""")
+        
+        st.markdown("**📈 季節トレンド:**")
+        for trend in prediction['seasonal_trends']:
+            st.markdown(f"• {trend}")
+    
+    with col2:
+        st.markdown("**🎯 市場機会:**")
+        for opportunity in prediction['market_opportunities']:
+            st.markdown(f"• {opportunity}")
+    
+    # 最重要推奨事項
+    st.markdown("#### ⭐ 最重要推奨事項")
+    
+    for i, recommendation in enumerate(analysis['recommendations'], 1):
+        st.markdown(f"**{i}.** {recommendation}")
+    
+    # 信頼度スコア
+    confidence = analysis['confidence_score']
+    st.markdown(f"**🎯 信頼度スコア:** {confidence:.1%}")
+    
+    # AI生成フラグと時刻表示
+    if analysis.get('ai_generated', False):
+        st.caption("🤖 AI分析により生成 | " + analysis.get('timestamp', ''))
+    else:
+        st.caption("📊 サンプルデータによる分析 | " + analysis.get('timestamp', ''))
+
+st.markdown("---")
 
 # 比較分析タブ
 with tabs[1]:
@@ -1461,6 +1781,21 @@ with st.sidebar:
     
     st.markdown("---")
     
+    # AI分析結果サマリー
+    if 'multiplatform_ai_analysis' in st.session_state:
+        st.subheader("🤖 AI分析サマリー")
+        analysis = st.session_state.multiplatform_ai_analysis
+        
+        # 最重要な推奨事項のみ表示
+        if analysis.get('recommendations'):
+            st.markdown(f"**💡 最重要推奨:** {analysis['recommendations'][0]}")
+        
+        # 信頼度スコア
+        confidence = analysis.get('confidence_score', 0)
+        st.metric("信頼度", f"{confidence:.1%}")
+        
+        st.markdown("---")
+    
     # 緊急アラート
     st.subheader("🚨 アラート")
     
@@ -1484,10 +1819,10 @@ with st.sidebar:
         st.switch_page("app.py")
     
     if st.button("⚡ リアルタイム最適化", use_container_width=True):
-        st.switch_page("pages/realtime_ad_optimizer.py")
+        st.switch_page("pages/_realtime_ad_optimizer.py")
     
     if st.button("🎨 Creative Studio", use_container_width=True):
-        st.switch_page("pages/ai_creative_studio.py")
+        st.switch_page("pages/_ai_creative_studio.py")
 
 # フッター
 st.markdown("---")
