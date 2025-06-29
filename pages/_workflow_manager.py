@@ -159,6 +159,64 @@ with tab1:
             
             if st.button(f"詳細を見る", key=f"view_{wf_id}"):
                 st.session_state.selected_workflow = wf_id
+                
+    # 選択されたワークフローの詳細表示
+    if hasattr(st.session_state, 'selected_workflow') and st.session_state.selected_workflow:
+        selected_wf_id = st.session_state.selected_workflow
+        selected_template = WORKFLOW_TEMPLATES.get(selected_wf_id)
+        
+        if selected_template:
+            st.markdown("---")
+            st.markdown(f"### 📋 ワークフロー詳細: {selected_template['name']}")
+            
+            # 詳細情報カード
+            st.markdown(f"""
+            <div class="workflow-card" style="border: 2px solid #22c55e;">
+                <h3 style="margin: 0; color: #22c55e;">{selected_template['icon']} {selected_template['name']}</h3>
+                <p style="color: #94a3b8; margin: 0.5rem 0;">{selected_template['description']}</p>
+                <div style="margin-top: 1rem;">
+                    <p style="color: #64748b; font-size: 0.875rem;">総ステップ数: {len(selected_template['steps'])}</p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # ステップの詳細表示
+            st.markdown("#### 🔄 実行ステップ")
+            
+            for idx, step in enumerate(selected_template['steps']):
+                st.markdown(f"""
+                <div class="step-box">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>Step {idx + 1}: {step['name']}</strong><br>
+                            <small style="color: #64748b;">ツール: {step['tool']}</small>
+                        </div>
+                        <div style="color: #22c55e; font-size: 1.5rem;">
+                            ✅
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if idx < len(selected_template['steps']) - 1:
+                    st.markdown('<div class="connector"></div>', unsafe_allow_html=True)
+            
+            # アクションボタン
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                if st.button("🚀 このワークフローを実行", type="primary", use_container_width=True):
+                    st.switch_page("pages/_workflow_manager.py")  # 実行タブに移動
+                    st.session_state.selected_execution_workflow = selected_wf_id
+            
+            with col2:
+                if st.button("📋 テンプレートとして複製", use_container_width=True):
+                    st.session_state.workflow_steps = selected_template['steps']
+                    st.success(f"テンプレート「{selected_template['name']}」を新規作成タブにコピーしました")
+            
+            with col3:
+                if st.button("❌ 詳細を閉じる", use_container_width=True):
+                    del st.session_state.selected_workflow
 
 with tab2:
     st.markdown("### ➕ 新規ワークフロー作成")

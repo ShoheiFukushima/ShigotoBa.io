@@ -24,11 +24,14 @@ module.exports = defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
     
-    /* Take screenshot on failure */
-    screenshot: 'only-on-failure',
+    /* Take screenshot on failure and at each step */
+    screenshot: 'on',
     
     /* Record video on failure */
     video: 'retain-on-failure',
+    
+    /* Slow down actions for better visibility */
+    slowMo: process.env.CI ? 0 : 100,
   },
 
   /* Configure projects for major browsers */
@@ -61,7 +64,7 @@ module.exports = defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'python3 -m streamlit run dashboard/home.py --server.port 8501 --server.headless true',
+    command: 'python3 -m streamlit run app.py --server.port 8501 --server.headless true',
     url: 'http://localhost:8501',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
