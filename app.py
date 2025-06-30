@@ -30,8 +30,13 @@ try:
         st.success("📊 Google Sheets データベース: 接続済み")
     else:
         st.warning("📊 Google Sheets データベース: 未接続 - [設定](/pages/_sheets_settings.py)で接続してください")
-except:
-    st.info("📊 Google Sheets データベース: 設定が必要 - [設定ページ](/pages/_sheets_settings.py)を確認してください")
+except Exception as e:
+    st.info(f"📊 Google Sheets データベース: 設定が必要 - [設定ページ](/pages/_sheets_settings.py)を確認してください")
+    # デバッグ情報を展開可能なセクションに表示
+    with st.expander("エラー詳細", expanded=False):
+        st.error(f"エラー内容: {str(e)}")
+        import traceback
+        st.code(traceback.format_exc())
 
 # サイドバー設定をカスタマイズ
 sidebar_config = get_default_sidebar_config()

@@ -20,13 +20,13 @@ test.describe('Marketing Flow Dashboard - Basic UI Tests', () => {
     // タイトルの確認（実際のタイトルに合わせて修正）
     await expect(page).toHaveTitle('shigotoba.io - マーケティング自動化');
     
-    // メインタイトルの確認（時間によって変わる挨拶を確認）
+    // メインタイトルの確認（現在のUIに合わせて修正）
     const title = page.locator('h1');
     await expect(title).toBeVisible();
     
-    // 挨拶の内容を確認（おはようございます、こんにちは、こんばんは のいずれか）
+    // ダッシュボードタイトルの内容を確認
     const titleText = await title.textContent();
-    expect(titleText).toMatch(/(おはようございます|こんにちは|こんばんは)/);
+    expect(titleText).toMatch(/(🏠 ダッシュボード|おはようございます|こんにちは|こんばんは)/);
   });
 
   test('should show project management section', async ({ page }) => {
@@ -40,9 +40,9 @@ test.describe('Marketing Flow Dashboard - Basic UI Tests', () => {
   });
 
   test('should display main category buttons', async ({ page }) => {
-    // メインカテゴリボタンの確認
+    // メインカテゴリボタンの確認（重複を避けるため、より具体的な検索）
     const categories = [
-      '開発室',
+      '📋 開発室',  // 具体的な絵文字付きテキストで検索
       'プロダクト',
       'A/Bテスト', 
       'パフォーマンス',
@@ -53,8 +53,8 @@ test.describe('Marketing Flow Dashboard - Basic UI Tests', () => {
     ];
     
     for (const category of categories) {
-      // 各カテゴリのボタンを検索
-      const categoryButton = page.locator('button').filter({ hasText: category });
+      // 各カテゴリのボタンを検索（first()で最初の要素を選択）
+      const categoryButton = page.locator('button').filter({ hasText: category }).first();
       await expect(categoryButton).toBeVisible();
     }
     

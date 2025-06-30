@@ -129,15 +129,24 @@ SHIGOTOBA_SESSION_CONFIG = {
 
 def init_common_session_state():
     """共通のセッション状態を初期化"""
+    # 初期化フラグをチェックして、既に初期化済みならスキップ
+    if st.session_state.get('_initialized', False):
+        return
+    
     init_session_state(COMMON_SESSION_CONFIG)
     
-    # Google Sheetsとの同期を試みる
-    try:
-        from .google_sheets_db import sync_sheets_to_session
-        sync_sheets_to_session()
-    except Exception as e:
-        # エラーが発生してもアプリは動作するようにする
-        pass
+    # Google Sheetsとの同期を試みる（初回のみ）
+    if not st.session_state.get('_sheets_synced', False):
+        try:
+            from .google_sheets_db import sync_sheets_to_session
+            sync_sheets_to_session()
+            st.session_state._sheets_synced = True
+        except Exception as e:
+            # エラーが発生してもアプリは動作するようにする
+            pass
+    
+    # 初期化完了フラグを設定
+    st.session_state._initialized = True
     
 def init_shigotoba_session_state():
     """Shigotoba.io用のセッション状態を初期化"""

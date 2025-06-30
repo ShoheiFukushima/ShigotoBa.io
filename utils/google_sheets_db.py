@@ -287,15 +287,11 @@ class GoogleSheetsDB:
             return f"https://docs.google.com/spreadsheets/d/{self.spreadsheet_id}"
         return ""
 
-# シングルトンインスタンス
-_db_instance = None
-
+# Streamlitのキャッシュを使用してシングルトンを実装
+@st.cache_resource
 def get_db() -> GoogleSheetsDB:
-    """データベースインスタンスを取得"""
-    global _db_instance
-    if _db_instance is None:
-        _db_instance = GoogleSheetsDB()
-    return _db_instance
+    """データベースインスタンスを取得（キャッシュされたシングルトン）"""
+    return GoogleSheetsDB()
 
 def sync_session_to_sheets():
     """セッション状態をGoogle Sheetsに同期"""
@@ -316,9 +312,15 @@ def sync_sheets_to_session():
     # プロジェクトを読み込み
     projects = db.load_projects()
     if projects:
-        st.session_state.projects = projects
+        # 既存のプロジェクトと比較して、変更がある場合のみ更新
+        current_projects = st.session_state.get('projects', {})
+        if projects != current_projects:
+            st.session_state.projects = projects
     
     # TODOを読み込み
     todos = db.load_todos()
     if todos:
-        st.session_state.todos = todos
+        # 既存のTODOと比較して、変更がある場合のみ更新
+        current_todos = st.session_state.get('todos', [])
+        if todos != current_todos:
+            st.session_state.todos = todos
